@@ -1,82 +1,202 @@
-import React, { useState, useEffect } from 'react';
-import { Play, SkipBack, SkipForward, Heart, Repeat, Shuffle, Volume2 } from 'lucide-react';
-import { Song } from '../types';
+import React, { useState, useEffect } from "react";
+import {
+  Play,
+  SkipBack,
+  SkipForward,
+  Heart,
+  Repeat,
+  Shuffle,
+  Volume2,
+  Music,
+} from "lucide-react";
+import type { SpotifyNowPlaying } from "../types/spotify";
 
 interface SpotifyWidgetProps {
-  currentSong: Song;
+  /** Gerçek Spotify verisi (null = hiçbir şey çalmıyor veya veri yok) */
+  nowPlaying: SpotifyNowPlaying | null;
 }
 
-export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({ currentSong }) => {
-  const [progress, setProgress] = useState(30);
-  const [isPlaying, setIsPlaying] = useState(true);
+/**
+ * SpotifyWidget
+ * =============
+ * Şu anda çalan şarkıyı gösteren widget.
+ *
+ * Değişenler:
+ * - Artık mock Song değil, gerçek SpotifyNowPlaying verisi alıyor
+ * - Progress bar gerçek ilerlemeyi gösteriyor (Spotify'dan gelen progress_ms)
+ * - Hiçbir şey çalmıyorsa "idle" tasarımı gösteriyor
+ * - Şarkı linkine tıklayınca Spotify'da açılıyor
+ */
+export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({ nowPlaying }) => {
+  /**
+   * progress: 0-100 arası yüzde
+   *
+   * Spotify bize progress_ms (şu anki pozisyon) ve duration_ms (toplam süre) veriyor.
+   * Yüzdeyi hesaplamak: (progress / duration) * 100
+   *
+   * Ayrıca her saniye client-side olarak artırıyoruz ki progress bar kesintisiz hareket etsin.
+   * (Spotify API'den sadece 30 saniyede bir güncelleme geliyor)
+   */
+  const [progress, setProgress] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  // Fake progress bar
+  // Spotify'dan gelen veri değiştiğinde progress'i güncelle
   useEffect(() => {
-    if (!isPlaying) return;
+    if (
+      nowPlaying?.isPlaying &&
+      nowPlaying.progress_ms &&
+      nowPlaying.duration_ms
+    ) {
+      setProgress((nowPlaying.progress_ms / nowPlaying.duration_ms) * 100);
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(nowPlaying?.isPlaying ?? false);
+    }
+  }, [nowPlaying]);
+
+  // Client-side animasyon: Her saniye progress bar'ı artır (gerçek Spotify verisi arasında)
+  useEffect(() => {
+    if (!isPlaying || !nowPlaying?.duration_ms) return;
+
+    const increment = (1000 / nowPlaying.duration_ms) * 100; // 1 saniyenin yüzde karşılığı
     const interval = setInterval(() => {
-      setProgress((prev) => (prev >= 100 ? 0 : prev + 0.5));
+      setProgress((prev) => (prev >= 100 ? 0 : prev + increment));
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, nowPlaying?.duration_ms]);
+
+  /**
+   * formatTime: milisaniyeyi "dakika:saniye" formatına çevirir
+   * Örnek: 183000 → "3:03"
+   */
+  const formatTime = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  // Hiçbir şey çalmıyorsa veya veri yoksa "idle" durumu göster
+  const isIdle = !nowPlaying || !nowPlaying.isPlaying || !nowPlaying.title;
 
   return (
-    <div className="bg-spotify-dark p-4 rounded-xl shadow-lg border border-white/10 w-full max-w-md mx-auto">
-      <div className="flex items-end space-x-4 mb-4">
-        <img 
-          src={currentSong.albumArt} 
-          alt={currentSong.title} 
-          className="w-16 h-16 rounded shadow-md object-cover animate-pulse-slow" 
-        />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-spotify-green font-bold uppercase tracking-wider mb-1">Now Playing</p>
-          <h3 className="text-white font-bold truncate text-lg leading-tight">{currentSong.title}</h3>
-          <p className="text-spotify-grey text-sm truncate">{currentSong.artist}</p>
-        </div>
-        <Heart className="text-spotify-green w-5 h-5 cursor-pointer hover:scale-110 transition-transform" fill="#1DB954" />
-      </div>
+    <div className="group relative rounded-2xl overflow-hidden">
+      {/* Glow border on hover */}
+      <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-green-500/25 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-[1px]" />
 
-      {/* Progress Bar */}
-      <div className="mb-2">
-        <div className="h-1 w-full bg-gray-600 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-white rounded-full transition-all duration-500 ease-linear"
-            style={{ width: `${progress}%` }}
+      <div className="relative bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.06] rounded-2xl p-5 w-full transition-[background-color,border-color,box-shadow] duration-300 shadow-sm dark:shadow-none group-hover:shadow-lg dark:group-hover:shadow-none group-hover:bg-green-50/30 dark:group-hover:bg-white/[0.05]">
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+
+        {/* Now Playing label */}
+        <p className="text-[10px] text-green-600 dark:text-green-400 font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-1.5">
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${isIdle ? "bg-gray-400 dark:bg-gray-600" : "bg-green-500 dark:bg-green-400 animate-pulse"}`}
           />
-        </div>
-        <div className="flex justify-between text-[10px] text-spotify-grey mt-1">
-          <span>1:21</span>
-          <span>{currentSong.duration}</span>
-        </div>
-      </div>
+          {isIdle ? "Şu an çalmıyor" : "Şu an çalıyor"}
+        </p>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between px-2">
-        <Shuffle className="w-4 h-4 text-spotify-grey hover:text-white cursor-pointer" />
-        <SkipBack className="w-5 h-5 text-gray-300 hover:text-white cursor-pointer" />
-        
-        <button 
-          onClick={() => setIsPlaying(!isPlaying)}
-          className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-        >
-          {isPlaying ? (
-            <div className="flex gap-1 h-4 items-center">
-               <div className="w-1 h-4 bg-black"></div>
-               <div className="w-1 h-4 bg-black"></div>
+        {isIdle ? (
+          /* ===== Idle State: Hiçbir şey çalmıyorken ===== */
+          <div className="flex flex-col items-center justify-center py-6 text-center">
+            <div className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center mb-3">
+              <Music className="w-7 h-7 text-gray-400 dark:text-gray-600" />
             </div>
-          ) : (
-            <Play className="w-5 h-5 text-black ml-1" fill="black" />
-          )}
-        </button>
-
-        <SkipForward className="w-5 h-5 text-gray-300 hover:text-white cursor-pointer" />
-        <Repeat className="w-4 h-4 text-spotify-green cursor-pointer" />
-      </div>
-
-      <div className="flex items-center gap-2 mt-4 justify-end">
-          <Volume2 className="w-4 h-4 text-spotify-grey" />
-          <div className="w-20 h-1 bg-gray-600 rounded-full">
-            <div className="w-3/4 h-full bg-spotify-grey hover:bg-spotify-green rounded-full"></div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Spotify'da şu an bir şey çalmıyor
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">
+              Müzik açınca burada görünecek
+            </p>
           </div>
+        ) : (
+          /* ===== Playing State: Şarkı çalıyorken ===== */
+          <>
+            <div className="flex items-center gap-4 mb-5">
+              <a
+                href={nowPlaying!.songUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative shrink-0"
+              >
+                <img
+                  src={nowPlaying!.albumArt}
+                  alt={nowPlaying!.title}
+                  className="w-16 h-16 rounded-xl shadow-lg object-cover border border-gray-200/40 dark:border-white/[0.08]"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/20 to-transparent" />
+              </a>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-gray-900 dark:text-white font-bold truncate text-[15px] leading-tight mb-0.5">
+                  {nowPlaying!.title}
+                </h3>
+                <p className="text-gray-400 dark:text-gray-500 text-sm truncate">
+                  {nowPlaying!.artist}
+                </p>
+                <p className="text-gray-300 dark:text-gray-600 text-[11px] truncate mt-0.5">
+                  {nowPlaying!.album}
+                </p>
+              </div>
+              <Heart
+                className="text-green-500 dark:text-green-400 w-4.5 h-4.5 cursor-pointer hover:scale-110 transition-transform shrink-0"
+                fill="currentColor"
+              />
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-4">
+              <div className="h-1 w-full bg-gray-200 dark:bg-white/[0.06] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full transition-all duration-500 ease-linear shadow-[0_0_6px_rgba(74,222,128,0.3)]"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-600 mt-1.5 font-mono">
+                <span>
+                  {nowPlaying!.progress_ms
+                    ? formatTime(nowPlaying!.progress_ms)
+                    : "0:00"}
+                </span>
+                <span>
+                  {nowPlaying!.duration_ms
+                    ? formatTime(nowPlaying!.duration_ms)
+                    : "0:00"}
+                </span>
+              </div>
+            </div>
+
+            {/* Controls (dekoratif — Spotify Web API'de playback control için premium + device gerekir) */}
+            <div className="flex items-center justify-between px-3">
+              <Shuffle className="w-3.5 h-3.5 text-gray-400 dark:text-gray-600 hover:text-green-500 dark:hover:text-green-400 cursor-pointer transition-colors" />
+              <SkipBack className="w-4.5 h-4.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors" />
+
+              <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/20">
+                {isPlaying ? (
+                  <div className="flex gap-1 h-3.5 items-center">
+                    <div className="w-[3px] h-3.5 bg-white rounded-full" />
+                    <div className="w-[3px] h-3.5 bg-white rounded-full" />
+                  </div>
+                ) : (
+                  <Play
+                    className="w-4.5 h-4.5 text-white ml-0.5"
+                    fill="white"
+                  />
+                )}
+              </div>
+
+              <SkipForward className="w-4.5 h-4.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer transition-colors" />
+              <Repeat className="w-3.5 h-3.5 text-green-500 dark:text-green-400 cursor-pointer hover:text-green-600 dark:hover:text-green-300 transition-colors" />
+            </div>
+
+            {/* Volume (dekoratif) */}
+            <div className="flex items-center gap-2 mt-4 justify-end">
+              <Volume2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-600" />
+              <div className="w-16 h-1 bg-gray-200 dark:bg-white/[0.06] rounded-full overflow-hidden">
+                <div className="w-3/4 h-full bg-gray-400 dark:bg-gray-500 hover:bg-green-500 dark:hover:bg-green-400 rounded-full transition-colors" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

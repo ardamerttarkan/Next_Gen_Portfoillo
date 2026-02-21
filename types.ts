@@ -1,13 +1,14 @@
-import React from 'react';
+import React from "react";
 
-export type ViewMode = 
-  | 'landing' 
-  | 'personal' 
-  | 'professional' 
-  | 'admin' 
-  | 'blog-detail' 
-  | 'personal-blog-list' 
-  | 'professional-blog-list';
+export type ViewMode =
+  | "landing"
+  | "personal"
+  | "professional"
+  | "admin"
+  | "admin-login"
+  | "blog-detail"
+  | "personal-blog-list"
+  | "professional-blog-list";
 
 export interface Song {
   id: string;
@@ -28,8 +29,8 @@ export interface MediaItem {
   title: string;
   rating: number; // 1-10
   image: string;
-  type: 'movie' | 'series';
-  status?: 'Watched' | 'Watching' | 'Plan to Watch';
+  type: "movie" | "series";
+  status?: "Watched" | "Watching" | "Plan to Watch";
 }
 
 export interface BlogPost {
@@ -38,7 +39,7 @@ export interface BlogPost {
   excerpt: string;
   date: string;
   readTime: string;
-  category: 'hobby' | 'tech';
+  category: "hobby" | "tech";
   content?: string;
   image?: string;
 }

@@ -1,0 +1,15 @@
+RewriteEngine On
+
+# Pass Authorization header to PHP
+RewriteCond %{HTTP:Authorization} .+
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Deny access to config.php
+<Files "config.php">
+    Require all denied
+</Files>
+
+# Deny access to setup.php in production (remove the comment below)
+# <Files "setup.php">
+#     Require all denied
+# </Files>
