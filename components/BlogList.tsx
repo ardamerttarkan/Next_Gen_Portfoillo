@@ -40,7 +40,7 @@ export const BlogList: React.FC<BlogListProps> = ({
             <h1
               className={`text-xl font-bold font-display ${isProf ? "text-slate-900 dark:text-white" : "text-gray-900 dark:text-white"}`}
             >
-              {isProf ? "Engineering Blog" : "Personal Logs"}
+              {isProf ? "Blog" : "Personal Logs"}
             </h1>
           </div>
         </div>

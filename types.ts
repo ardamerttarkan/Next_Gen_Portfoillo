@@ -60,6 +60,18 @@ export interface Skill {
   icon?: React.ReactNode;
 }
 
+export interface CareerItem {
+  id: string;
+  type: "work" | "internship" | "freelance";
+  title: string;
+  company: string;
+  location?: string;
+  startDate: string;
+  endDate?: string; // empty means "Present"
+  description: string;
+  techStack?: string[];
+}
+
 export interface AppData {
   currentSong: Song;
   playlists: Playlist[];
@@ -70,4 +82,5 @@ export interface AppData {
   techBlogs: BlogPost[];
   projects: Project[];
   skills: Skill[];
+  career: CareerItem[];
 }

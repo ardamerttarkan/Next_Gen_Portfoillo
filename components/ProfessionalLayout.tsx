@@ -1,5 +1,5 @@
 import React from "react";
-import { Project, Skill, BlogPost } from "../types";
+import { Project, Skill, BlogPost, CareerItem } from "../types";
 import {
   Github,
   Linkedin,
@@ -14,12 +14,18 @@ import {
   Cpu,
   Database,
   Globe,
+  Briefcase,
+  GraduationCap,
+  Laptop,
+  MapPin,
+  Calendar,
 } from "lucide-react";
 
 interface ProfessionalLayoutProps {
   projects: Project[];
   skills: Skill[];
   blogs: BlogPost[];
+  career: CareerItem[];
   onBlogClick: (blog: BlogPost) => void;
   onViewAllBlogs: () => void;
 }
@@ -28,6 +34,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
   projects,
   skills,
   blogs,
+  career,
   onBlogClick,
   onViewAllBlogs,
 }) => {
@@ -76,7 +83,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-cyan-500/20">
-              JD
+              AMT
             </div>
             <span className="font-display font-bold text-lg tracking-tight text-gray-900 dark:text-white">
               Arda Mert Tarkan
@@ -85,8 +92,9 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           <nav className="hidden md:flex gap-1 text-sm font-medium text-gray-500">
             {[
               { label: "Hakkımda", id: "about" },
-              { label: "Projeler", id: "projects" },
               { label: "Yetenekler", id: "skills" },
+              { label: "Kariyer", id: "career" },
+              { label: "Projeler", id: "projects" },
               { label: "Blog", id: null, action: onViewAllBlogs },
             ].map((item) => (
               <button
@@ -119,20 +127,21 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
               <span>İşe alıma açık</span>
             </div>
             <h1 className="font-display text-5xl md:text-6xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-[-0.03em]">
-              Dijital{" "}
+              Yazılım{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
-                deneyimler
+                Geliştiricisi
               </span>{" "}
-              inşa ediyorum.
+              Arda Mert Tarkan.
             </h1>
             <p className="text-lg text-gray-500 dark:text-gray-400 max-w-md leading-relaxed">
-              Ölçeklenebilir web uygulamaları ve sezgisel kullanıcı arayüzleri
-              konusunda uzmanlaşmış Full Stack Mühendis. Karmaşık problemleri
-              zarif çözümlere dönüştürüyorum.
+              Yalova Üniversitesi Bilgisayar Mühendisliği mezunu, çeştli
+              projelerde deneyim kazanmış bir yazılım mühendisi. Amacım
+              kullanıcı odaklı, performanslı ve ölçeklenebilir çözümler
+              geliştirmek.
             </p>
             <div className="flex gap-3">
               <a
-                href="https://github.com"
+                href="https://github.com/ardamerttarkan"
                 target="_blank"
                 rel="noreferrer"
                 className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all"
@@ -140,7 +149,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                 <Github className="w-5 h-5" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/ardamert60/"
                 target="_blank"
                 rel="noreferrer"
                 className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] flex items-center justify-center text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-500/30 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
@@ -153,7 +162,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
             <div className="absolute -inset-4 bg-gradient-to-tr from-cyan-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl" />
             <div className="relative rounded-2xl overflow-hidden border border-gray-200/60 dark:border-white/[0.08] shadow-lg dark:shadow-none">
               <img
-                src="https://picsum.photos/id/101/600/600"
+                src="../img/me.jpg"
                 alt="Workspace"
                 className="w-full aspect-square object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
               />
@@ -177,9 +186,9 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-                JavaScript ekosistemi üzerine yoğunlaşmış, performans ve SEO
-                için en güncel framework'leri kullanan bir teknoloji yığınına
-                sahibim.
+                Oyun motorlarından, web frameworklerine, veritabanlarından bulut
+                servislerine kadar geniş bir yelpazede deneyim sahibiyim. İşte
+                bazı favori araçlarım ve teknolojilerim:
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -187,8 +196,8 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                     icon: (
                       <Code2 className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
                     ),
-                    title: "Frontend",
-                    desc: "React, Next.js, Tailwind",
+                    title: "Frontend & Mobil",
+                    desc: "Vue, React, HTML/CSS, Flutter",
                     color: "cyan",
                   },
                   {
@@ -196,15 +205,15 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                       <Terminal className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
                     ),
                     title: "Backend",
-                    desc: "Node, Postgres, Redis",
+                    desc: "PHP, Node.js, MySQL, MongoDB",
                     color: "emerald",
                   },
                   {
                     icon: (
                       <Database className="w-5 h-5 text-purple-500 dark:text-purple-400" />
                     ),
-                    title: "Veritabanı",
-                    desc: "MongoDB, Prisma, SQL",
+                    title: "Sistem ve Yazılım Geliştirme",
+                    desc: "C#, C++, Python, Unreal Engine, Unity",
                     color: "purple",
                   },
                   {
@@ -212,7 +221,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                       <Globe className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                     ),
                     title: "DevOps",
-                    desc: "Docker, AWS, CI/CD",
+                    desc: "Docker, Linux (Debian), Azure, CI/CD",
                     color: "amber",
                   },
                 ].map((item) => (
@@ -253,6 +262,229 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
               ))}
             </div>
           </div>
+        </section>
+
+        {/* ===== Career Section ===== */}
+        <section id="career">
+          <div className="flex items-center gap-4 mb-12">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200/60 dark:border-amber-500/20 flex items-center justify-center">
+              <Briefcase className="text-amber-500 dark:text-amber-400 w-5 h-5" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Kariyer
+            </h2>
+            <div className="h-px flex-1 bg-gray-200 dark:bg-white/[0.06]" />
+          </div>
+
+          {/* Career Type Tabs */}
+          {(() => {
+            const typeConfig = [
+              {
+                key: "work" as const,
+                label: "Çalışma",
+                icon: Briefcase,
+                color: "cyan",
+              },
+              {
+                key: "internship" as const,
+                label: "Staj",
+                icon: GraduationCap,
+                color: "emerald",
+              },
+              {
+                key: "freelance" as const,
+                label: "Freelance",
+                icon: Laptop,
+                color: "purple",
+              },
+            ];
+
+            const groupedCareer = {
+              work: career.filter((c) => c.type === "work"),
+              internship: career.filter((c) => c.type === "internship"),
+              freelance: career.filter((c) => c.type === "freelance"),
+            };
+
+            const colorMap: Record<
+              string,
+              {
+                bg: string;
+                border: string;
+                text: string;
+                dot: string;
+                line: string;
+                badge: string;
+              }
+            > = {
+              cyan: {
+                bg: "bg-cyan-50 dark:bg-cyan-500/10",
+                border: "border-cyan-200/60 dark:border-cyan-500/20",
+                text: "text-cyan-600 dark:text-cyan-400",
+                dot: "bg-cyan-500",
+                line: "from-cyan-500/40 to-cyan-500/0",
+                badge:
+                  "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20",
+              },
+              emerald: {
+                bg: "bg-emerald-50 dark:bg-emerald-500/10",
+                border: "border-emerald-200/60 dark:border-emerald-500/20",
+                text: "text-emerald-600 dark:text-emerald-400",
+                dot: "bg-emerald-500",
+                line: "from-emerald-500/40 to-emerald-500/0",
+                badge:
+                  "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20",
+              },
+              purple: {
+                bg: "bg-purple-50 dark:bg-purple-500/10",
+                border: "border-purple-200/60 dark:border-purple-500/20",
+                text: "text-purple-600 dark:text-purple-400",
+                dot: "bg-purple-500",
+                line: "from-purple-500/40 to-purple-500/0",
+                badge:
+                  "bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/20",
+              },
+            };
+
+            return (
+              <div className="space-y-12">
+                {typeConfig.map(({ key, label, icon: TypeIcon, color }) => {
+                  const items = groupedCareer[key];
+                  if (items.length === 0) return null;
+                  const colors = colorMap[color];
+
+                  return (
+                    <div key={key}>
+                      {/* Type Header */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <div
+                          className={`w-8 h-8 rounded-lg ${colors.bg} border ${colors.border} flex items-center justify-center`}
+                        >
+                          <TypeIcon className={`w-4 h-4 ${colors.text}`} />
+                        </div>
+                        <h3 className="font-display text-lg font-bold text-gray-800 dark:text-gray-200">
+                          {label}
+                        </h3>
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${colors.badge}`}
+                        >
+                          {items.length}
+                        </span>
+                      </div>
+
+                      {/* Timeline */}
+                      <div className="relative ml-4">
+                        {/* Timeline Line */}
+                        <div
+                          className={`absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b ${colors.line}`}
+                        />
+
+                        <div className="space-y-6">
+                          {items.map((item, idx) => {
+                            const formatDate = (d: string) => {
+                              if (!d) return "Devam Ediyor";
+                              const [y, m] = d.split("-");
+                              const months = [
+                                "Oca",
+                                "Şub",
+                                "Mar",
+                                "Nis",
+                                "May",
+                                "Haz",
+                                "Tem",
+                                "Ağu",
+                                "Eyl",
+                                "Eki",
+                                "Kas",
+                                "Ara",
+                              ];
+                              return `${months[parseInt(m) - 1]} ${y}`;
+                            };
+
+                            return (
+                              <div
+                                key={item.id}
+                                className="relative pl-8 group"
+                              >
+                                {/* Timeline Dot */}
+                                <div
+                                  className={`absolute left-0 top-3 w-2.5 h-2.5 rounded-full ${colors.dot} ring-4 ring-white dark:ring-[#06060e] z-10 group-hover:scale-125 transition-transform`}
+                                />
+
+                                {/* Card */}
+                                <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-gray-300 dark:hover:border-white/[0.12] hover:bg-gray-50/50 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-all duration-300">
+                                  {/* Header Row */}
+                                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
+                                    <div>
+                                      <h4 className="font-bold text-gray-900 dark:text-white text-[15px] group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                                        {item.title}
+                                      </h4>
+                                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                                        {item.company}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                                      {item.location && (
+                                        <span className="flex items-center gap-1">
+                                          <MapPin className="w-3 h-3" />
+                                          {item.location}
+                                        </span>
+                                      )}
+                                      <span className="flex items-center gap-1 bg-gray-100 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.06] px-2.5 py-1 rounded-full font-medium">
+                                        <Calendar className="w-3 h-3" />
+                                        {formatDate(item.startDate)} —{" "}
+                                        {formatDate(item.endDate || "")}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Description */}
+                                  <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+                                    {item.description}
+                                  </p>
+
+                                  {/* Tech Stack Tags */}
+                                  {item.techStack &&
+                                    item.techStack.length > 0 && (
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {item.techStack.map((tech) => (
+                                          <span
+                                            key={tech}
+                                            className="px-2.5 py-0.5 bg-gray-50 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.06] text-gray-500 dark:text-gray-400 text-[11px] rounded-full font-medium"
+                                          >
+                                            {tech}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                  {/* Active indicator for current positions */}
+                                  {!item.endDate && (
+                                    <div className="mt-3 flex items-center gap-1.5">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                      <span className="text-[11px] font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">
+                                        Aktif
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {career.length === 0 && (
+                  <div className="text-center py-12 text-gray-400 dark:text-gray-600">
+                    <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">Henüz kariyer bilgisi eklenmemiş.</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </section>
 
         {/* ===== Projects Section ===== */}
@@ -328,7 +560,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
               <FileText className="text-emerald-500 dark:text-emerald-400 w-5 h-5" />
             </div>
             <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-              Mühendislik Blogu
+              Blog
             </h2>
             <div className="h-px flex-1 bg-gray-200 dark:bg-white/[0.06]" />
             <button

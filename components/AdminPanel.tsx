@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AppData, Project, BlogPost, Skill } from "../types";
+import { AppData, Project, BlogPost, Skill, CareerItem } from "../types";
 import { RichTextEditor } from "./RichTextEditor";
 import * as api from "../services/api";
 import {
@@ -25,16 +25,31 @@ import {
   Upload,
   FileImage,
   AlertCircle,
+  Briefcase,
+  Home,
+  KeyRound,
+  User,
+  Eye,
+  EyeOff,
+  Shield,
 } from "lucide-react";
 
 interface AdminPanelProps {
   data: AppData;
   updateData: (newData: AppData) => void;
   onLogout: () => void;
+  onGoHome?: () => void;
 }
 
-type Tab = "dashboard" | "projects" | "techBlogs" | "hobbyBlogs" | "skills";
-type EditingItem = Project | BlogPost | Skill | null;
+type Tab =
+  | "dashboard"
+  | "projects"
+  | "techBlogs"
+  | "hobbyBlogs"
+  | "skills"
+  | "career"
+  | "settings";
+type EditingItem = Project | BlogPost | Skill | CareerItem | null;
 
 // Standard Input Style
 const INPUT_CLASS =
@@ -44,6 +59,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   data,
   updateData,
   onLogout,
+  onGoHome,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -77,14 +93,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         await api.deleteBlog(String(id));
       } else if (key === "skills") {
         await api.deleteSkill(String(id));
+      } else if (key === "career") {
+        await api.deleteCareer(String(id));
       }
 
       // Update local state
       const list = data[key] as any[];
-      const newList = list.filter(
-        (item: any) =>
-          (item.id && item.id !== id) || (item.name && item.name !== id),
-      );
+      const newList = list.filter((item: any) => {
+        if (key === "skills") return item.name !== id;
+        return item.id !== id;
+      });
       updateData({ ...data, [key]: newList });
     } catch (err: any) {
       alert("Silme hatası: " + (err.message || "Bilinmeyen hata"));
@@ -118,19 +136,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           await api.updateBlog(editingItem.id as string, formData);
         } else if (key === "skills") {
           await api.updateSkill((editingItem as Skill).name, formData);
+        } else if (key === "career") {
+          await api.updateCareer(editingItem.id as string, formData);
         }
 
-        const newList = currentList.map((item) =>
-          item.id === editingItem.id ||
-          (item.name && item.name === (editingItem as Skill).name)
-            ? { ...item, ...formData }
-            : item,
-        );
+        const newList = currentList.map((item) => {
+          if (key === "skills") {
+            return item.name === (editingItem as Skill).name
+              ? { ...item, ...formData }
+              : item;
+          }
+          return item.id === editingItem.id ? { ...item, ...formData } : item;
+        });
         updateData({ ...data, [key]: newList });
       } else {
         // CREATE
-        const newId = formData.id || `${Date.now()}`;
-        const newItem = { ...formData, id: newId };
+        const newItem =
+          key === "skills"
+            ? { ...formData }
+            : { ...formData, id: formData.id || `${Date.now()}` };
 
         if (key === "projects") {
           await api.createProject(newItem);
@@ -138,6 +162,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           await api.createBlog(newItem);
         } else if (key === "skills") {
           await api.createSkill(newItem);
+        } else if (key === "career") {
+          await api.createCareer(newItem);
         }
 
         const newList = [newItem, ...currentList];
@@ -249,6 +275,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             collapsed={!isSidebarOpen}
             onClick={() => setActiveTab("skills")}
           />
+          <SidebarBtn
+            icon={Briefcase}
+            label="Career"
+            active={activeTab === "career"}
+            collapsed={!isSidebarOpen}
+            onClick={() => setActiveTab("career")}
+          />
 
           <div
             className={`pt-6 pb-2 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider ${!isSidebarOpen && "text-center"}`}
@@ -264,7 +297,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           />
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 space-y-2">
+          <SidebarBtn
+            icon={Settings}
+            label="Settings"
+            active={activeTab === "settings"}
+            collapsed={!isSidebarOpen}
+            onClick={() => setActiveTab("settings")}
+          />
+          {onGoHome && (
+            <button
+              onClick={onGoHome}
+              className={`flex items-center gap-3 w-full p-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all ${!isSidebarOpen && "justify-center"}`}
+            >
+              <Home className="w-5 h-5" />
+              {isSidebarOpen && <span className="font-medium">Ana Sayfa</span>}
+            </button>
+          )}
           <button
             onClick={onLogout}
             className={`flex items-center gap-3 w-full p-3 text-red-400 hover:text-red-300 hover:bg-red-900/10 rounded-lg transition-all ${!isSidebarOpen && "justify-center"}`}
@@ -293,11 +342,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               Welcome back, <span className="text-white font-bold">Admin</span>
             </div>
             <div className="w-8 h-8 rounded-full bg-prof-blue text-white flex items-center justify-center font-bold text-xs">
-              JD
+              AMT
             </div>
           </div>
         </header>
-
         <div className="flex-1 overflow-y-auto p-6 md:p-8">
           {activeTab === "dashboard" && (
             <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -306,7 +354,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 Here's what's happening across your portfolios.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
                 <StatCard
                   label="Total Projects"
                   value={data.projects.length}
@@ -330,6 +378,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   value={data.skills.length}
                   icon={Code}
                   color="orange"
+                />
+                <StatCard
+                  label="Career Items"
+                  value={data.career.length}
+                  icon={Briefcase}
+                  color="blue"
                 />
               </div>
 
@@ -376,7 +430,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {activeTab !== "dashboard" && (
+          {activeTab !== "dashboard" && activeTab !== "settings" && (
             <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
@@ -431,6 +485,89 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )
+                ) : activeTab === "career" ? (
+                  data.career.length === 0 ? (
+                    <EmptyState label="Career" />
+                  ) : (
+                    <div className="space-y-4">
+                      {data.career.map((item) => {
+                        const typeLabels: Record<string, string> = {
+                          work: "Çalışma",
+                          internship: "Staj",
+                          freelance: "Freelance",
+                        };
+                        const typeColors: Record<string, string> = {
+                          work: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+                          internship:
+                            "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                          freelance:
+                            "bg-purple-500/10 text-purple-400 border-purple-500/20",
+                        };
+                        return (
+                          <div
+                            key={item.id}
+                            className="bg-gray-900 p-5 rounded-xl border border-gray-800 flex flex-col md:flex-row gap-5 items-start md:items-center group hover:border-gray-700 transition-all"
+                          >
+                            <div className="w-full md:w-14 h-14 bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
+                              <Briefcase className="w-6 h-6 text-gray-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className="font-bold text-lg truncate text-white">
+                                  {item.title}
+                                </h3>
+                                <span
+                                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${typeColors[item.type] || typeColors.work}`}
+                                >
+                                  {typeLabels[item.type] || item.type}
+                                </span>
+                                {!item.endDate && (
+                                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-emerald-400">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    Aktif
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-gray-400 text-sm mb-1">
+                                {item.company}
+                                {item.location ? ` · ${item.location}` : ""}
+                              </p>
+                              <p className="text-gray-500 text-xs">
+                                {item.startDate} —{" "}
+                                {item.endDate || "Devam Ediyor"}
+                              </p>
+                              {item.techStack && item.techStack.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {item.techStack.map((t) => (
+                                    <span
+                                      key={t}
+                                      className="px-2 py-0.5 bg-gray-800 text-gray-400 text-[11px] rounded border border-gray-700"
+                                    >
+                                      {t}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                              <button
+                                onClick={() => handleEdit(item, "career")}
+                                className="flex-1 md:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete("career", item.id)}
+                                className="px-3 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )
                 ) : (data[activeTab] as any[]).length === 0 ? (
@@ -499,7 +636,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             </div>
           )}
-        </div>
+
+          {activeTab === "settings" && <AdminSettingsView />}
+        </div>{" "}
       </main>
 
       {isModalOpen && (
@@ -550,6 +689,17 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           liveUrl: "",
         });
       else if (type === "skills") setFormData({ name: "", level: 50 });
+      else if (type === "career")
+        setFormData({
+          type: "work",
+          title: "",
+          company: "",
+          location: "",
+          startDate: "",
+          endDate: "",
+          description: "",
+          techStack: [],
+        });
       else
         setFormData({
           title: "",
@@ -623,7 +773,9 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
               ? "Skill"
               : type === "projects"
                 ? "Project"
-                : "Post"}
+                : type === "career"
+                  ? "Career Item"
+                  : "Post"}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white">
             <X className="w-6 h-6" />
@@ -631,7 +783,15 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          <InputGroup label={type === "skills" ? "Skill Name" : "Title"}>
+          <InputGroup
+            label={
+              type === "skills"
+                ? "Skill Name"
+                : type === "career"
+                  ? "Pozisyon / Ünvan"
+                  : "Title"
+            }
+          >
             <input
               type="text"
               value={formData.title || formData.name || ""}
@@ -642,7 +802,11 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
                 )
               }
               className={INPUT_CLASS}
-              placeholder="Enter title..."
+              placeholder={
+                type === "career"
+                  ? "Ör: Full-Stack Developer"
+                  : "Enter title..."
+              }
             />
           </InputGroup>
 
@@ -659,6 +823,94 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
                 className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-prof-blue"
               />
             </InputGroup>
+          ) : type === "career" ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <InputGroup label="Şirket / Kurum">
+                  <input
+                    type="text"
+                    value={formData.company || ""}
+                    onChange={(e) => handleChange("company", e.target.value)}
+                    className={INPUT_CLASS}
+                    placeholder="Ör: Tech Corp"
+                  />
+                </InputGroup>
+                <InputGroup label="Tür">
+                  <select
+                    value={formData.type || "work"}
+                    onChange={(e) => handleChange("type", e.target.value)}
+                    className={INPUT_CLASS}
+                  >
+                    <option value="work">Çalışma</option>
+                    <option value="internship">Staj</option>
+                    <option value="freelance">Freelance</option>
+                  </select>
+                </InputGroup>
+              </div>
+
+              <InputGroup label="Konum">
+                <input
+                  type="text"
+                  value={formData.location || ""}
+                  onChange={(e) => handleChange("location", e.target.value)}
+                  className={INPUT_CLASS}
+                  placeholder="Ör: İstanbul, Türkiye"
+                />
+              </InputGroup>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <InputGroup label="Başlangıç Tarihi">
+                  <input
+                    type="month"
+                    value={formData.startDate || ""}
+                    onChange={(e) => handleChange("startDate", e.target.value)}
+                    className={`${INPUT_CLASS} [color-scheme:dark]`}
+                  />
+                </InputGroup>
+                <InputGroup label="Bitiş Tarihi (boş = Devam Ediyor)">
+                  <input
+                    type="month"
+                    value={formData.endDate || ""}
+                    onChange={(e) => handleChange("endDate", e.target.value)}
+                    className={`${INPUT_CLASS} [color-scheme:dark]`}
+                  />
+                </InputGroup>
+              </div>
+
+              <InputGroup label="Açıklama">
+                <textarea
+                  value={formData.description || ""}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  className={`${INPUT_CLASS} min-h-[100px]`}
+                  placeholder="Bu pozisyondaki görev ve sorumluluklarınız..."
+                />
+              </InputGroup>
+
+              <InputGroup label="Teknolojiler (Enter ile ekle)">
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.techStack?.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="bg-gray-800 text-blue-400 px-2 py-1 rounded text-sm flex items-center gap-1 border border-gray-700"
+                    >
+                      {tag}{" "}
+                      <button onClick={() => removeTag(tag)}>
+                        <X className="w-3 h-3 hover:text-white" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="relative">
+                  <Tags className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    onKeyDown={handleTagInput}
+                    className={`${INPUT_CLASS} pl-10`}
+                    placeholder="Teknoloji ekle..."
+                  />
+                </div>
+              </InputGroup>
+            </>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -855,6 +1107,229 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
             className="px-6 py-2.5 rounded-lg bg-prof-blue hover:bg-blue-600 text-white font-medium flex items-center gap-2 shadow-lg shadow-blue-900/20"
           >
             <Save className="w-4 h-4" /> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AdminSettingsView = () => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const handleSaveCredentials = async () => {
+    setMessage(null);
+
+    if (!currentPassword) {
+      setMessage({ type: "error", text: "Mevcut şifrenizi girin." });
+      return;
+    }
+    if (!newUsername && !newPassword) {
+      setMessage({ type: "error", text: "En az bir alanı değiştirin." });
+      return;
+    }
+    if (newPassword && newPassword.length < 6) {
+      setMessage({
+        type: "error",
+        text: "Yeni şifre en az 6 karakter olmalı.",
+      });
+      return;
+    }
+    if (newPassword && newPassword !== confirmPassword) {
+      setMessage({ type: "error", text: "Şifreler eşleşmiyor." });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload: any = { currentPassword };
+      if (newUsername) payload.username = newUsername;
+      if (newPassword) payload.password = newPassword;
+
+      await api.updateAdminCredentials(payload);
+
+      setMessage({ type: "success", text: "Bilgiler başarıyla güncellendi!" });
+      setCurrentPassword("");
+      setNewUsername("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Güncelleme hatası." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto animate-in fade-in duration-500">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 rounded-xl bg-prof-blue/10 border border-prof-blue/20 flex items-center justify-center">
+          <Shield className="w-6 h-6 text-prof-blue" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-display font-bold">Ayarlar</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Admin hesap bilgilerinizi güncelleyin.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        <div className="p-6 border-b border-gray-800">
+          <h3 className="font-bold text-lg flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-prof-blue" />
+            Hesap Bilgileri
+          </h3>
+          <p className="text-gray-500 text-sm mt-1">
+            Kullanıcı adı ve şifrenizi değiştirin.
+          </p>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Current Password - Required for any change */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-400 ml-1 flex items-center gap-2">
+              <span className="text-red-400">*</span> Mevcut Şifre
+            </label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
+              <input
+                type={showCurrentPw ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className={`${INPUT_CLASS} pl-10 pr-12`}
+                placeholder="Mevcut şifrenizi girin"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPw(!showCurrentPw)}
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-white transition-colors"
+              >
+                {showCurrentPw ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-800" />
+
+          {/* New Username */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-400 ml-1">
+              Yeni Kullanıcı Adı
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                className={`${INPUT_CLASS} pl-10`}
+                placeholder="Boş bırakırsanız değişmez"
+              />
+            </div>
+          </div>
+
+          {/* New Password */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-400 ml-1">
+              Yeni Şifre
+            </label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
+              <input
+                type={showNewPw ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className={`${INPUT_CLASS} pl-10 pr-12`}
+                placeholder="Min. 6 karakter"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPw(!showNewPw)}
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-white transition-colors"
+              >
+                {showNewPw ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm Password */}
+          {newPassword && (
+            <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+              <label className="text-sm font-semibold text-gray-400 ml-1">
+                Şifre Tekrar
+              </label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`${INPUT_CLASS} pl-10 ${
+                    confirmPassword && confirmPassword !== newPassword
+                      ? "border-red-500/50 focus:ring-red-500"
+                      : confirmPassword && confirmPassword === newPassword
+                        ? "border-emerald-500/50 focus:ring-emerald-500"
+                        : ""
+                  }`}
+                  placeholder="Yeni şifreyi tekrar girin"
+                />
+                {confirmPassword && confirmPassword === newPassword && (
+                  <Check className="absolute right-3 top-3.5 w-5 h-5 text-emerald-400" />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Message */}
+          {message && (
+            <div
+              className={`p-4 rounded-xl text-sm font-medium flex items-center gap-3 ${
+                message.type === "success"
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  : "bg-red-500/10 text-red-400 border border-red-500/20"
+              }`}
+            >
+              {message.type === "success" ? (
+                <Check className="w-5 h-5 shrink-0" />
+              ) : (
+                <AlertCircle className="w-5 h-5 shrink-0" />
+              )}
+              {message.text}
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 border-t border-gray-800 bg-gray-950/30 flex justify-end">
+          <button
+            onClick={handleSaveCredentials}
+            disabled={saving}
+            className="px-6 py-2.5 rounded-lg bg-prof-blue hover:bg-blue-600 text-white font-medium flex items-center gap-2 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {saving ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            {saving ? "Kaydediliyor..." : "Bilgileri Güncelle"}
           </button>
         </div>
       </div>

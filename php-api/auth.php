@@ -1,12 +1,85 @@
 <?php
 /**
  * Admin Authentication API
- * POST /php-api/auth.php  → Login
+ * POST   /php-api/auth.php              → Login
+ * PUT    /php-api/auth.php              → Update credentials (auth required)
  */
 
 require_once __DIR__ . '/helpers.php';
 
-if (method() !== 'POST') {
+$method = method();
+
+if ($method === 'PUT') {
+    // ===== UPDATE ADMIN CREDENTIALS =====
+    $user = requireAuth();
+    $body = getJsonBody();
+
+    $newUsername = trim($body['username'] ?? '');
+    $newPassword = $body['password'] ?? '';
+    $currentPassword = $body['currentPassword'] ?? '';
+
+    if (empty($currentPassword)) {
+        jsonResponse(['error' => 'Mevcut şifre gerekli.'], 400);
+    }
+
+    $db = getDB();
+
+    // Verify current password
+    $stmt = $db->prepare('SELECT id, username, password FROM admins WHERE id = ?');
+    $stmt->execute([$user['id']]);
+    $admin = $stmt->fetch();
+
+    if (!$admin || !password_verify($currentPassword, $admin['password'])) {
+        jsonResponse(['error' => 'Mevcut şifre hatalı.'], 403);
+    }
+
+    // Build update
+    $fields = [];
+    $params = [];
+
+    if (!empty($newUsername) && $newUsername !== $admin['username']) {
+        // Check if username already taken
+        $check = $db->prepare('SELECT id FROM admins WHERE username = ? AND id != ?');
+        $check->execute([$newUsername, $admin['id']]);
+        if ($check->fetch()) {
+            jsonResponse(['error' => 'Bu kullanıcı adı zaten kullanılıyor.'], 409);
+        }
+        $fields[] = 'username = ?';
+        $params[] = $newUsername;
+    }
+
+    if (!empty($newPassword)) {
+        if (strlen($newPassword) < 6) {
+            jsonResponse(['error' => 'Şifre en az 6 karakter olmalı.'], 400);
+        }
+        $fields[] = 'password = ?';
+        $params[] = password_hash($newPassword, PASSWORD_DEFAULT);
+    }
+
+    if (empty($fields)) {
+        jsonResponse(['error' => 'Değiştirilecek bilgi yok.'], 400);
+    }
+
+    $params[] = $admin['id'];
+    $sql = 'UPDATE admins SET ' . implode(', ', $fields) . ' WHERE id = ?';
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+
+    // Generate new token with updated info
+    $finalUsername = !empty($newUsername) ? $newUsername : $admin['username'];
+    $token = generateToken($admin['id'], $finalUsername);
+
+    jsonResponse([
+        'success' => true,
+        'token' => $token,
+        'user' => [
+            'id' => $admin['id'],
+            'username' => $finalUsername,
+        ]
+    ]);
+}
+
+if ($method !== 'POST') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
 

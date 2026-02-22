@@ -48,7 +48,7 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
             onClick={onBack}
             className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold transition-all ${backBtnClass}`}
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" /> Geri
           </button>
         </div>
       </div>

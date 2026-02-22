@@ -95,9 +95,34 @@ export function logout() {
   setToken(null);
 }
 
+// ============ ADMIN SETTINGS ============
+
+export async function updateAdminCredentials(data: {
+  currentPassword: string;
+  username?: string;
+  password?: string;
+}): Promise<{
+  success: boolean;
+  token: string;
+  user: { id: number; username: string };
+}> {
+  const result = await apiFetch<{
+    success: boolean;
+    token: string;
+    user: { id: number; username: string };
+  }>("auth.php", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  if (result.token) {
+    setToken(result.token);
+  }
+  return result;
+}
+
 // ============ PROJECTS ============
 
-import { Project, BlogPost, Skill } from "../types";
+import { Project, BlogPost, Skill, CareerItem } from "../types";
 
 export async function getProjects(): Promise<Project[]> {
   return apiFetch<Project[]>("projects.php");
@@ -194,6 +219,37 @@ export async function deleteSkill(name: string): Promise<{ success: boolean }> {
   });
 }
 
+// ============ CAREER ============
+
+export async function getCareer(): Promise<CareerItem[]> {
+  return apiFetch<CareerItem[]>("career.php");
+}
+
+export async function createCareer(
+  item: Omit<CareerItem, "id"> & { id?: string },
+): Promise<{ success: boolean; id: string }> {
+  return apiFetch("career.php", {
+    method: "POST",
+    body: JSON.stringify(item),
+  });
+}
+
+export async function updateCareer(
+  id: string,
+  item: Partial<CareerItem>,
+): Promise<{ success: boolean }> {
+  return apiFetch(`career.php?id=${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify(item),
+  });
+}
+
+export async function deleteCareer(id: string): Promise<{ success: boolean }> {
+  return apiFetch(`career.php?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
 // ============ LOAD ALL DATA ============
 
 import { AppData } from "../types";
@@ -205,12 +261,15 @@ import * as mockData from "./mockData";
  */
 export async function loadAllData(): Promise<AppData> {
   try {
-    const [projects, techBlogs, hobbyBlogs, skills] = await Promise.all([
-      getProjects(),
-      getBlogs("tech"),
-      getBlogs("hobby"),
-      getSkills(),
-    ]);
+    const [projects, techBlogs, hobbyBlogs, skills, career] = await Promise.all(
+      [
+        getProjects(),
+        getBlogs("tech"),
+        getBlogs("hobby"),
+        getSkills(),
+        getCareer(),
+      ],
+    );
 
     return {
       // From API (no mockData fallback so CRUD operations persist)
@@ -218,6 +277,7 @@ export async function loadAllData(): Promise<AppData> {
       techBlogs,
       hobbyBlogs,
       skills,
+      career,
       // Static / from other services (not in DB yet)
       currentSong: mockData.currentSong,
       playlists: mockData.playlists,
@@ -238,6 +298,7 @@ export async function loadAllData(): Promise<AppData> {
       techBlogs: mockData.techBlogs,
       projects: mockData.projects,
       skills: mockData.skills,
+      career: mockData.career,
     };
   }
 }
