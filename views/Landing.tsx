@@ -218,11 +218,7 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
           className={`mt-12 md:mt-16 text-center transition-all duration-1000 delay-500 ease-out ${
             loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
-        >
-          <p className="text-gray-400 dark:text-gray-600 text-xs tracking-wider uppercase">
-            İki farklı dünya, bir portfolyo
-          </p>
-        </div>
+        ></div>
       </div>
 
       {/* ===== Keyframe Animations ===== */}

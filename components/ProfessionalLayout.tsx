@@ -522,11 +522,17 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                         <ExternalLink className="w-4.5 h-4.5" />
                       </a>
                     </div>
-                    <img
-                      src={project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                    />
+                    {project.image ? (
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-cyan-500/20 via-indigo-500/20 to-purple-500/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-purple-500/10 flex items-center justify-center">
+                        <Cpu className="w-12 h-12 text-gray-300 dark:text-gray-600" />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#06060e] via-transparent to-transparent opacity-80 pointer-events-none" />
                   </div>
                   <div className="p-6 flex-1 flex flex-col">

@@ -190,7 +190,15 @@ const App: React.FC = () => {
     >
       {/* Theme Toggle available everywhere except admin */}
       {view !== "admin" && (
-        <ThemeToggle isDark={darkMode} toggle={() => setDarkMode(!darkMode)} />
+        <ThemeToggle
+          isDark={darkMode}
+          toggle={() => setDarkMode(!darkMode)}
+          offsetTop={
+            view === "blog-detail" ||
+            view === "personal-blog-list" ||
+            view === "professional-blog-list"
+          }
+        />
       )}
 
       {/* --- VIEWS --- */}

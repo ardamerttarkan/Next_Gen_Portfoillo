@@ -13,7 +13,7 @@ $db = getDB();
 
 switch (method()) {
     case 'GET':
-        $stmt = $db->query('SELECT * FROM projects ORDER BY created_at DESC');
+        $stmt = $db->query('SELECT * FROM projects ORDER BY created_at ASC');
         $projects = $stmt->fetchAll();
 
         // Convert tech_stack JSON string to array

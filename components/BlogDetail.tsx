@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import DOMPurify from "dompurify";
 import { BlogPost } from "../types";
-import { Clock, Calendar, ArrowLeft } from "lucide-react";
+import { Clock, Calendar, ArrowLeft, Sparkles } from "lucide-react";
 
 interface BlogDetailProps {
   post: BlogPost;
@@ -22,39 +22,86 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
   const isProf = theme === "professional";
 
   // Theme Styles
-  const bgClass = isProf
-    ? "bg-slate-50 dark:bg-slate-950"
-    : "bg-gray-50 dark:bg-[#0a0a0a]";
   const textClass = isProf
     ? "text-slate-900 dark:text-white"
     : "text-gray-900 dark:text-white";
   const accentClass = isProf
     ? "text-prof-blue"
     : "text-yellow-600 dark:text-yellow-500";
-  const backBtnClass = isProf
-    ? "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
-    : "bg-white dark:bg-white/10 text-gray-700 dark:text-white border-gray-200 dark:border-white/10 hover:bg-gray-100";
 
   return (
-    <div
-      className={`min-h-screen ${bgClass} font-sans transition-colors duration-300`}
-    >
-      {/* Navigation Bar */}
-      <div
-        className={`sticky top-0 z-50 backdrop-blur-md bg-opacity-80 border-b ${isProf ? "bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800" : "bg-white/80 dark:bg-black/50 border-gray-200 dark:border-white/10"}`}
-      >
-        <div className="max-w-4xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#06060e] text-gray-800 dark:text-gray-200 font-sans transition-colors duration-300">
+      {/* ===== Background Orbs ===== */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        {isProf ? (
+          <>
+            <div
+              className="absolute -top-32 right-0 w-[500px] h-[500px] rounded-full opacity-[0.06] dark:opacity-[0.12] blur-[130px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #06b6d4 0%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute top-1/2 -left-40 w-[550px] h-[550px] rounded-full opacity-[0.05] dark:opacity-[0.10] blur-[120px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #3b82f6 0%, transparent 70%)",
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <div
+              className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-[0.06] dark:opacity-[0.15] blur-[140px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #a855f7 0%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.10] blur-[120px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #ec4899 0%, transparent 70%)",
+              }}
+            />
+          </>
+        )}
+      </div>
+      <div className="fixed inset-0 opacity-[0.04] dark:opacity-[0.02] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
+
+      {/* ===== Navbar ===== */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#06060e]/70 backdrop-blur-xl border-b border-gray-200/60 dark:border-white/[0.06]">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div
+            className="flex items-center gap-2.5 cursor-pointer"
+            onClick={onBack}
+          >
+            {isProf ? (
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-cyan-500/20">
+                AMT
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
+                <Sparkles className="w-4 h-4" />
+              </div>
+            )}
+            <span className="font-display font-bold text-lg tracking-tight text-gray-900 dark:text-white">
+              {isProf ? "Arda Mert Tarkan" : "Kişisel"}
+            </span>
+          </div>
           <button
             onClick={onBack}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold transition-all ${backBtnClass}`}
+            className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white px-3.5 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-all"
           >
             <ArrowLeft className="w-4 h-4" /> Geri
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Hero Image */}
-      <div className="w-full h-[40vh] relative">
+      <div className="w-full h-[40vh] relative z-10">
         {post.image ? (
           <img
             src={post.image}
@@ -92,7 +139,7 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
       </div>
 
       {/* Content */}
-      <article className="max-w-3xl mx-auto px-6 py-12">
+      <article className="relative z-10 max-w-3xl mx-auto px-6 py-12">
         <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-200 dark:border-gray-800">
           <span className="flex items-center gap-2">
             <Calendar className="w-4 h-4" /> {post.date}

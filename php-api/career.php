@@ -11,22 +11,6 @@ require_once __DIR__ . '/helpers.php';
 
 $db = getDB();
 
-// Ensure table exists
-$db->exec("CREATE TABLE IF NOT EXISTS career (
-    id VARCHAR(64) PRIMARY KEY,
-    type ENUM('work','internship','freelance') NOT NULL DEFAULT 'work',
-    title VARCHAR(255) NOT NULL,
-    company VARCHAR(255) NOT NULL,
-    location VARCHAR(255) DEFAULT '',
-    start_date VARCHAR(20) NOT NULL,
-    end_date VARCHAR(20) DEFAULT '',
-    description TEXT NOT NULL,
-    tech_stack JSON DEFAULT NULL,
-    sort_order INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
 switch (method()) {
     case 'GET':
         $stmt = $db->query('SELECT id, type, title, company, location, start_date, end_date, description, tech_stack FROM career ORDER BY start_date DESC, sort_order ASC');

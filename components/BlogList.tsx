@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { BlogPost } from "../types";
-import { ArrowLeft, Calendar, Clock, ArrowRight } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, ArrowRight, Sparkles } from "lucide-react";
 
 interface BlogListProps {
   blogs: BlogPost[];
@@ -22,31 +22,84 @@ export const BlogList: React.FC<BlogListProps> = ({
   const isProf = variant === "professional";
 
   return (
-    <div
-      className={`min-h-screen font-sans ${isProf ? "bg-slate-50 dark:bg-slate-950" : "bg-gray-50 dark:bg-[#0a0a0a]"}`}
-    >
-      {/* Header */}
-      <header
-        className={`sticky top-0 z-40 border-b backdrop-blur-md ${isProf ? "bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800" : "bg-white/80 dark:bg-black/50 border-gray-200 dark:border-white/10"}`}
-      >
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen font-sans bg-[#f8fafc] dark:bg-[#06060e] text-gray-800 dark:text-gray-200">
+      {/* ===== Background Orbs ===== */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        {isProf ? (
+          <>
+            <div
+              className="absolute -top-32 right-0 w-[500px] h-[500px] rounded-full opacity-[0.06] dark:opacity-[0.12] blur-[130px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #06b6d4 0%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute top-1/2 -left-40 w-[550px] h-[550px] rounded-full opacity-[0.05] dark:opacity-[0.10] blur-[120px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #3b82f6 0%, transparent 70%)",
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <div
+              className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-[0.06] dark:opacity-[0.15] blur-[140px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #a855f7 0%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.10] blur-[120px]"
+              style={{
+                background:
+                  "radial-gradient(circle, #ec4899 0%, transparent 70%)",
+              }}
+            />
+          </>
+        )}
+      </div>
+      <div className="fixed inset-0 opacity-[0.04] dark:opacity-[0.02] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
+
+      {/* ===== Navbar ===== */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#06060e]/70 backdrop-blur-xl border-b border-gray-200/60 dark:border-white/[0.06]">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div
+            className="flex items-center gap-2.5 cursor-pointer"
+            onClick={onBack}
+          >
+            {isProf ? (
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-cyan-500/20">
+                AMT
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
+                <Sparkles className="w-4 h-4" />
+              </div>
+            )}
+            <span className="font-display font-bold text-lg tracking-tight text-gray-900 dark:text-white">
+              {isProf ? "Arda Mert Tarkan" : "Kişisel"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`hidden sm:inline text-sm font-medium px-3.5 py-1.5 rounded-lg ${isProf ? "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10" : "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10"}`}
+            >
+              Blog
+            </span>
             <button
               onClick={onBack}
-              className={`p-2 rounded-full transition-colors ${isProf ? "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white" : "hover:bg-white/10 text-gray-900 dark:text-white"}`}
+              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white px-3.5 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-all"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-4 h-4" /> Geri
             </button>
-            <h1
-              className={`text-xl font-bold font-display ${isProf ? "text-slate-900 dark:text-white" : "text-gray-900 dark:text-white"}`}
-            >
-              {isProf ? "Blog" : "Personal Logs"}
-            </h1>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-12">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogs.map((blog) => (
             <article
