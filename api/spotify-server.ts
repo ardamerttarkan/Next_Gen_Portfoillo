@@ -25,21 +25,66 @@
  * client_id:client_secret → Base64'e çevrilir → "Basic xxx" şeklinde gönderilir
  */
 
+import path from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-dotenv.config();
+/**
+ * ESM Uyumlu __dirname
+ * --------------------
+ * package.json'da "type": "module" olduğu için Node.js ESM modunda çalışır.
+ * ESM'de __dirname ve __filename otomatik tanımlı DEĞİLDİR.
+ * import.meta.url → dosyanın file:// URL'sini verir
+ * fileURLToPath  → file:// URL'sini normal dosya yoluna çevirir
+ * path.dirname   → dosya yolundan dizin kısmını alır
+ */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// .env dosyası php-api/ klasöründe toplandı — oraya yönlendiriyoruz
+const envPath = path.resolve(__dirname, "../php-api/.env");
+dotenv.config({ path: envPath });
 
 const app = express();
-app.use(cors());
 
-const PORT = 3001;
+/**
+ * CORS Ayarları
+ * -------------
+ * Production'da Nginx aynı origin üzerinden proxy yaptığı için
+ * CORS genellikle gerekmez. Ama doğrudan API'ye erişim durumunda
+ * (test, mobil vs.) sorun çıkmaması için tüm origin'lere izin veriyoruz.
+ */
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET"],
+  }),
+);
+
+const PORT = process.env.SPOTIFY_SERVER_PORT || 3001;
 
 // .env'den okunan değerler
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.SPOTIFY_REFRESH_TOKEN;
+
+// Başlangıçta .env yüklenmesini doğrula
+console.log("📂 .env yolu:", envPath);
+console.log("🔑 SPOTIFY_CLIENT_ID:", CLIENT_ID ? "✅ yüklendi" : "❌ BOŞ!");
+console.log(
+  "🔑 SPOTIFY_CLIENT_SECRET:",
+  CLIENT_SECRET ? "✅ yüklendi" : "❌ BOŞ!",
+);
+console.log(
+  "🔑 SPOTIFY_REFRESH_TOKEN:",
+  REFRESH_TOKEN ? "✅ yüklendi" : "❌ BOŞ!",
+);
+console.log(
+  "🎬 TMDB_API_TOKEN:",
+  process.env.TMDB_API_TOKEN ? "✅ yüklendi" : "❌ BOŞ!",
+);
 
 // Sunucu bellekte tutulan access_token
 let accessToken: string | null = null;
@@ -473,6 +518,26 @@ app.get("/api/tmdb/recent-series", async (_req, res) => {
     console.error("TMDB Recent Series hatası:", error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+/**
+ * GET /api/health
+ * ---------------
+ * Sunucunun ayakta olup olmadığını ve .env'nin yüklenip yüklenmediğini kontrol eder.
+ * Debug ve monitoring için kullanılır.
+ */
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    port: PORT,
+    envPath,
+    envLoaded: {
+      SPOTIFY_CLIENT_ID: !!CLIENT_ID,
+      SPOTIFY_CLIENT_SECRET: !!CLIENT_SECRET,
+      SPOTIFY_REFRESH_TOKEN: !!REFRESH_TOKEN,
+      TMDB_API_TOKEN: !!process.env.TMDB_API_TOKEN,
+    },
+  });
 });
 
 // Server'ı başlat

@@ -177,17 +177,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const StatCard = ({ label, value, icon: Icon, color }: any) => (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg flex items-center gap-4 hover:border-prof-blue/50 transition-colors">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 shadow-lg flex items-center gap-3 sm:gap-4 hover:border-prof-blue/50 transition-colors">
       <div
-        className={`w-12 h-12 rounded-lg bg-opacity-20 flex items-center justify-center ${color === "blue" ? "bg-blue-500/20" : color === "emerald" ? "bg-emerald-500/20" : color === "purple" ? "bg-purple-500/20" : "bg-orange-500/20"}`}
+        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-opacity-20 flex items-center justify-center shrink-0 ${color === "blue" ? "bg-blue-500/20" : color === "emerald" ? "bg-emerald-500/20" : color === "purple" ? "bg-purple-500/20" : "bg-orange-500/20"}`}
       >
         <Icon
-          className={`w-6 h-6 ${color === "blue" ? "text-blue-500" : color === "emerald" ? "text-emerald-500" : color === "purple" ? "text-purple-500" : "text-orange-500"}`}
+          className={`w-5 h-5 sm:w-6 sm:h-6 ${color === "blue" ? "text-blue-500" : color === "emerald" ? "text-emerald-500" : color === "purple" ? "text-purple-500" : "text-orange-500"}`}
         />
       </div>
-      <div>
-        <div className="text-2xl font-bold font-display">{value}</div>
-        <div className="text-gray-400 text-sm font-medium">{label}</div>
+      <div className="min-w-0">
+        <div className="text-xl sm:text-2xl font-bold font-display">{value}</div>
+        <div className="text-gray-400 text-xs sm:text-sm font-medium truncate">{label}</div>
       </div>
     </div>
   );
@@ -215,7 +215,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       <aside
         className={`
-          fixed md:static inset-y-0 left-0 z-50 bg-gray-900 border-r border-gray-800 transition-all duration-300 flex flex-col
+          fixed md:static inset-y-0 left-0 z-50 bg-gray-900 border-r border-gray-800 transition-all duration-300 flex flex-col overflow-hidden
           ${isSidebarOpen ? "w-64 translate-x-0" : "w-0 md:w-20 -translate-x-full md:translate-x-0"}
         `}
       >
@@ -325,7 +325,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 bg-gray-950">
-        <header className="h-20 border-b border-gray-800 flex items-center justify-between px-6 bg-gray-900/50 backdrop-blur">
+        <header className="h-16 sm:h-20 border-b border-gray-800 flex items-center justify-between px-4 sm:px-6 bg-gray-900/50 backdrop-blur">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
@@ -337,8 +337,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             )}
           </button>
 
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-500">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="hidden sm:block text-sm text-gray-500">
               Welcome back, <span className="text-white font-bold">Admin</span>
             </div>
             <div className="w-8 h-8 rounded-full bg-prof-blue text-white flex items-center justify-center font-bold text-xs">
@@ -346,15 +346,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
           {activeTab === "dashboard" && (
             <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
-              <h1 className="text-3xl font-display font-bold mb-2">Overview</h1>
+              <h1 className="text-2xl sm:text-3xl font-display font-bold mb-2">Overview</h1>
               <p className="text-gray-400 mb-8">
                 Here's what's happening across your portfolios.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-10">
                 <StatCard
                   label="Total Projects"
                   value={data.projects.length}
@@ -406,15 +406,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           key={p.id}
                           className="hover:bg-gray-800/30 transition-colors"
                         >
-                          <td className="px-6 py-4 font-medium text-white flex items-center gap-3">
-                            <img
-                              src={p.image}
-                              className="w-8 h-8 rounded object-cover"
-                            />
-                            {p.title}
+                          <td className="px-4 sm:px-6 py-4 font-medium text-white">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={p.image}
+                                className="w-8 h-8 rounded object-cover shrink-0 hidden sm:block"
+                              />
+                              <span className="truncate">{p.title}</span>
+                            </div>
                           </td>
-                          <td className="px-6 py-4">
-                            {p.techStack.slice(0, 3).join(", ")}
+                          <td className="px-4 sm:px-6 py-4">
+                            <span className="hidden sm:inline">{p.techStack.slice(0, 3).join(", ")}</span>
+                            <span className="sm:hidden">{p.techStack.slice(0, 2).join(", ")}</span>
                           </td>
                           <td className="px-6 py-4">
                             <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs">
@@ -434,7 +437,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
-                  <h1 className="text-3xl font-display font-bold capitalize">
+                  <h1 className="text-2xl sm:text-3xl font-display font-bold capitalize">
                     {activeTab.replace(/([A-Z])/g, " $1").trim()}
                   </h1>
                   <p className="text-gray-400 text-sm mt-1">
@@ -508,9 +511,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         return (
                           <div
                             key={item.id}
-                            className="bg-gray-900 p-5 rounded-xl border border-gray-800 flex flex-col md:flex-row gap-5 items-start md:items-center group hover:border-gray-700 transition-all"
+                            className="bg-gray-900 p-4 sm:p-5 rounded-xl border border-gray-800 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center group hover:border-gray-700 transition-all"
                           >
-                            <div className="w-full md:w-14 h-14 bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
+                            <div className="hidden sm:flex w-14 h-14 bg-gray-800 rounded-xl items-center justify-center shrink-0">
                               <Briefcase className="w-6 h-6 text-gray-500" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -551,10 +554,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
                               <button
                                 onClick={() => handleEdit(item, "career")}
-                                className="flex-1 md:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
                               >
                                 Edit
                               </button>
@@ -579,9 +582,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     {(data[activeTab] as any[]).map((item) => (
                       <div
                         key={item.id}
-                        className="bg-gray-900 p-5 rounded-xl border border-gray-800 flex flex-col md:flex-row gap-6 items-start md:items-center group hover:border-gray-700 transition-all"
+                        className="bg-gray-900 p-4 sm:p-5 rounded-xl border border-gray-800 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center group hover:border-gray-700 transition-all"
                       >
-                        <div className="w-full md:w-32 h-32 md:h-20 bg-gray-800 rounded-lg overflow-hidden shrink-0">
+                        <div className="w-full sm:w-24 md:w-32 h-40 sm:h-20 md:h-20 bg-gray-800 rounded-lg overflow-hidden shrink-0">
                           {item.image ? (
                             <img
                               src={item.image}
@@ -595,8 +598,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-xl truncate text-white">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className="font-bold text-lg sm:text-xl truncate text-white">
                               {item.title}
                             </h3>
                             {activeTab.includes("Blog") && (
@@ -615,10 +618,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
                           <button
                             onClick={() => handleEdit(item, activeTab)}
-                            className="flex-1 md:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
                           >
                             Edit
                           </button>
@@ -764,9 +767,9 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-gray-900 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl border border-gray-800 flex flex-col">
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-gray-900 w-full sm:max-w-4xl max-h-[95vh] sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-800 flex flex-col">
+        <div className="p-4 sm:p-6 border-b border-gray-800 flex justify-between items-center">
           <h2 className="text-xl font-bold font-display text-white">
             {initialData ? "Edit" : "Create New"}{" "}
             {type === "skills"
@@ -782,7 +785,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
           <InputGroup
             label={
               type === "skills"
@@ -1063,7 +1066,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
               )}
 
               {type === "projects" && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InputGroup label="Repo URL">
                     <input
                       type="text"
@@ -1095,7 +1098,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           )}
         </div>
 
-        <div className="p-6 border-t border-gray-800 flex justify-end gap-3 bg-gray-950/30 rounded-b-2xl">
+        <div className="p-4 sm:p-6 border-t border-gray-800 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 bg-gray-950/30 rounded-b-2xl">
           <button
             onClick={onClose}
             className="px-6 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800 font-medium transition-colors"
