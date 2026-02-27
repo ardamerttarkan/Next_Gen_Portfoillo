@@ -13,7 +13,14 @@ $db = getDB();
 
 switch (method()) {
     case 'GET':
-        $stmt = $db->query('SELECT * FROM projects ORDER BY created_at ASC');
+        $showAll = ($_GET['status'] ?? '') === 'all';
+
+        if ($showAll) {
+            $stmt = $db->query('SELECT * FROM projects ORDER BY created_at ASC');
+        } else {
+            $stmt = $db->prepare('SELECT * FROM projects WHERE status = ? ORDER BY created_at ASC');
+            $stmt->execute(['active']);
+        }
         $projects = $stmt->fetchAll();
 
         // Convert tech_stack JSON string to array
@@ -38,16 +45,17 @@ switch (method()) {
         $repoUrl = trim($body['repoUrl'] ?? '');
         $liveUrl = trim($body['liveUrl'] ?? '');
         $image = $body['image'] ?? '';
+        $status = $body['status'] ?? 'active';
 
         if (empty($title)) {
             jsonResponse(['error' => 'Title is required'], 400);
         }
 
         $stmt = $db->prepare('
-            INSERT INTO projects (id, title, description, tech_stack, repo_url, live_url, image)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO projects (id, title, description, tech_stack, repo_url, live_url, image, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ');
-        $stmt->execute([$id, $title, $description, $techStack, $repoUrl, $liveUrl, $image]);
+        $stmt->execute([$id, $title, $description, $techStack, $repoUrl, $liveUrl, $image, $status]);
 
         jsonResponse(['success' => true, 'id' => $id], 201);
         break;
@@ -65,13 +73,14 @@ switch (method()) {
         $repoUrl = trim($body['repoUrl'] ?? '');
         $liveUrl = trim($body['liveUrl'] ?? '');
         $image = $body['image'] ?? '';
+        $status = $body['status'] ?? 'active';
 
         $stmt = $db->prepare('
-            INSERT INTO projects (id, title, description, tech_stack, repo_url, live_url, image)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE title=VALUES(title), description=VALUES(description), tech_stack=VALUES(tech_stack), repo_url=VALUES(repo_url), live_url=VALUES(live_url), image=VALUES(image)
+            INSERT INTO projects (id, title, description, tech_stack, repo_url, live_url, image, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE title=VALUES(title), description=VALUES(description), tech_stack=VALUES(tech_stack), repo_url=VALUES(repo_url), live_url=VALUES(live_url), image=VALUES(image), status=VALUES(status)
         ');
-        $stmt->execute([$id, $title, $description, $techStack, $repoUrl, $liveUrl, $image]);
+        $stmt->execute([$id, $title, $description, $techStack, $repoUrl, $liveUrl, $image, $status]);
 
         jsonResponse(['success' => true]);
         break;

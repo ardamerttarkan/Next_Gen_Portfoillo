@@ -89,6 +89,17 @@ $rateLimitFile = sys_get_temp_dir() . '/portfolio_login_' . md5($ip) . '.json';
 $maxAttempts = 5;
 $windowSeconds = 900; // 15 minutes
 
+// Eski rate limit dosyalarını temizle (windowSeconds'ı geçmiş olanlar)
+// Her istekte sadece %5 olasılıkla çalışır (performans optimizasyonu)
+if (random_int(1, 20) === 1) {
+    $pattern = sys_get_temp_dir() . '/portfolio_login_*.json';
+    foreach (glob($pattern) ?: [] as $f) {
+        if (file_exists($f) && (time() - filemtime($f)) > $windowSeconds) {
+            @unlink($f);
+        }
+    }
+}
+
 if (file_exists($rateLimitFile)) {
     $rateData = json_decode(file_get_contents($rateLimitFile), true);
     if ($rateData && $rateData['count'] >= $maxAttempts && (time() - $rateData['first']) < $windowSeconds) {

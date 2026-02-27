@@ -130,14 +130,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     try {
       if (editingItem) {
         // UPDATE
-        if (key === "projects") {
-          await api.updateProject(editingItem.id as string, formData);
-        } else if (key === "techBlogs" || key === "hobbyBlogs") {
-          await api.updateBlog(editingItem.id as string, formData);
-        } else if (key === "skills") {
+        if (key === "skills") {
           await api.updateSkill((editingItem as Skill).name, formData);
-        } else if (key === "career") {
-          await api.updateCareer(editingItem.id as string, formData);
+        } else {
+          const itemId = (editingItem as Project | BlogPost | CareerItem).id;
+          if (key === "projects") {
+            await api.updateProject(itemId, formData);
+          } else if (key === "techBlogs" || key === "hobbyBlogs") {
+            await api.updateBlog(itemId, formData);
+          } else if (key === "career") {
+            await api.updateCareer(itemId, formData);
+          }
         }
 
         const newList = currentList.map((item) => {
@@ -146,7 +149,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               ? { ...item, ...formData }
               : item;
           }
-          return item.id === editingItem.id ? { ...item, ...formData } : item;
+          const itemId = (editingItem as Project | BlogPost | CareerItem).id;
+          return item.id === itemId ? { ...item, ...formData } : item;
         });
         updateData({ ...data, [key]: newList });
       } else {
@@ -186,8 +190,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         />
       </div>
       <div className="min-w-0">
-        <div className="text-xl sm:text-2xl font-bold font-display">{value}</div>
-        <div className="text-gray-400 text-xs sm:text-sm font-medium truncate">{label}</div>
+        <div className="text-xl sm:text-2xl font-bold font-display">
+          {value}
+        </div>
+        <div className="text-gray-400 text-xs sm:text-sm font-medium truncate">
+          {label}
+        </div>
       </div>
     </div>
   );
@@ -349,7 +357,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
           {activeTab === "dashboard" && (
             <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
-              <h1 className="text-2xl sm:text-3xl font-display font-bold mb-2">Overview</h1>
+              <h1 className="text-2xl sm:text-3xl font-display font-bold mb-2">
+                Overview
+              </h1>
               <p className="text-gray-400 mb-8">
                 Here's what's happening across your portfolios.
               </p>
@@ -416,8 +426,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </div>
                           </td>
                           <td className="px-4 sm:px-6 py-4">
-                            <span className="hidden sm:inline">{p.techStack.slice(0, 3).join(", ")}</span>
-                            <span className="sm:hidden">{p.techStack.slice(0, 2).join(", ")}</span>
+                            <span className="hidden sm:inline">
+                              {p.techStack.slice(0, 3).join(", ")}
+                            </span>
+                            <span className="sm:hidden">
+                              {p.techStack.slice(0, 2).join(", ")}
+                            </span>
                           </td>
                           <td className="px-6 py-4">
                             <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs">
@@ -607,6 +621,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 {item.category}
                               </span>
                             )}
+                            {(activeTab === "projects" ||
+                              activeTab.includes("Blog")) && (
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded font-medium ${
+                                  item.status === "draft"
+                                    ? "bg-amber-500/20 text-amber-400"
+                                    : "bg-emerald-500/20 text-emerald-400"
+                                }`}
+                              >
+                                {item.status === "draft" ? "Taslak" : "Aktif"}
+                              </span>
+                            )}
                           </div>
                           <p className="text-gray-400 text-sm line-clamp-1 mb-2">
                             {item.description || item.excerpt}
@@ -690,6 +716,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           techStack: [],
           repoUrl: "",
           liveUrl: "",
+          status: "active",
         });
       else if (type === "skills") setFormData({ name: "", level: 50 });
       else if (type === "career")
@@ -712,6 +739,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           date: new Date().toISOString().split("T")[0],
           readTime: "5 min",
           category: type === "techBlogs" ? "tech" : "hobby",
+          status: "active",
         });
     }
   }, [type, initialData]);
@@ -812,6 +840,35 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
               }
             />
           </InputGroup>
+
+          {(type === "projects" || type.includes("Blog")) && (
+            <InputGroup label="Status">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleChange("status", "active")}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                    formData.status === "active" || !formData.status
+                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                      : "bg-gray-950 border-gray-800 text-gray-500 hover:border-gray-600"
+                  }`}
+                >
+                  ● Aktif
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleChange("status", "draft")}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border transition-all ${
+                    formData.status === "draft"
+                      ? "bg-amber-500/20 border-amber-500 text-amber-400"
+                      : "bg-gray-950 border-gray-800 text-gray-500 hover:border-gray-600"
+                  }`}
+                >
+                  ● Taslak
+                </button>
+              </div>
+            </InputGroup>
+          )}
 
           {type === "skills" ? (
             <InputGroup label={`Proficiency Level: ${formData.level}%`}>

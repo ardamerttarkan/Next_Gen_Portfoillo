@@ -54,6 +54,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           style={{
             background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)",
             animation: "profFloat1 16s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
         <div
@@ -61,6 +62,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           style={{
             background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)",
             animation: "profFloat2 20s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
         <div
@@ -68,6 +70,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           style={{
             background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)",
             animation: "profFloat3 14s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
       </div>
@@ -162,6 +165,8 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
             <div className="absolute -inset-4 bg-gradient-to-tr from-cyan-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl" />
             <div className="relative rounded-2xl overflow-hidden border border-gray-200/60 dark:border-white/[0.08] shadow-lg dark:shadow-none">
               <img
+                loading="lazy"
+                decoding="async"
                 src="../img/me.jpg"
                 alt="Workspace"
                 className="w-full aspect-square object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
@@ -524,6 +529,8 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                     </div>
                     {project.image ? (
                       <img
+                        loading="lazy"
+                        decoding="async"
                         src={project.image}
                         alt={project.title}
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
@@ -589,6 +596,8 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                   <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden shrink-0 border border-gray-200/60 dark:border-white/[0.06]">
                     {blog.image ? (
                       <img
+                        loading="lazy"
+                        decoding="async"
                         src={blog.image}
                         alt={blog.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"

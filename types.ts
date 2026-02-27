@@ -8,7 +8,8 @@ export type ViewMode =
   | "admin-login"
   | "blog-detail"
   | "personal-blog-list"
-  | "professional-blog-list";
+  | "professional-blog-list"
+  | "not-found";
 
 export interface Song {
   id: string;
@@ -42,6 +43,7 @@ export interface BlogPost {
   category: "hobby" | "tech";
   content?: string;
   image?: string;
+  status?: "active" | "draft";
 }
 
 export interface Project {
@@ -52,6 +54,7 @@ export interface Project {
   repoUrl?: string;
   liveUrl?: string;
   image: string;
+  status?: "active" | "draft";
 }
 
 export interface Skill {

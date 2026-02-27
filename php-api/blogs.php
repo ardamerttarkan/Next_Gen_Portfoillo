@@ -14,12 +14,23 @@ $db = getDB();
 switch (method()) {
     case 'GET':
         $category = $_GET['category'] ?? null;
+        $showAll = ($_GET['status'] ?? '') === 'all';
 
         if ($category && in_array($category, ['tech', 'hobby'])) {
-            $stmt = $db->prepare('SELECT * FROM blogs WHERE category = ? ORDER BY created_at DESC');
-            $stmt->execute([$category]);
+            if ($showAll) {
+                $stmt = $db->prepare('SELECT * FROM blogs WHERE category = ? ORDER BY created_at DESC');
+                $stmt->execute([$category]);
+            } else {
+                $stmt = $db->prepare('SELECT * FROM blogs WHERE category = ? AND status = ? ORDER BY created_at DESC');
+                $stmt->execute([$category, 'active']);
+            }
         } else {
-            $stmt = $db->query('SELECT * FROM blogs ORDER BY created_at DESC');
+            if ($showAll) {
+                $stmt = $db->query('SELECT * FROM blogs ORDER BY created_at DESC');
+            } else {
+                $stmt = $db->prepare('SELECT * FROM blogs WHERE status = ? ORDER BY created_at DESC');
+                $stmt->execute(['active']);
+            }
         }
 
         $blogs = $stmt->fetchAll();
@@ -45,16 +56,17 @@ switch (method()) {
         $readTime = $body['readTime'] ?? '5 min';
         $category = $body['category'] ?? 'tech';
         $image = $body['image'] ?? '';
+        $status = $body['status'] ?? 'active';
 
         if (empty($title)) {
             jsonResponse(['error' => 'Title is required'], 400);
         }
 
         $stmt = $db->prepare('
-            INSERT INTO blogs (id, title, excerpt, content, date, read_time, category, image)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO blogs (id, title, excerpt, content, date, read_time, category, image, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
-        $stmt->execute([$id, $title, $excerpt, $content, $date, $readTime, $category, $image]);
+        $stmt->execute([$id, $title, $excerpt, $content, $date, $readTime, $category, $image, $status]);
 
         jsonResponse(['success' => true, 'id' => $id], 201);
         break;
@@ -73,13 +85,14 @@ switch (method()) {
         $readTime = $body['readTime'] ?? '';
         $category = $body['category'] ?? 'tech';
         $image = $body['image'] ?? '';
+        $status = $body['status'] ?? 'active';
 
         $stmt = $db->prepare('
-            INSERT INTO blogs (id, title, excerpt, content, date, read_time, category, image)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE title=VALUES(title), excerpt=VALUES(excerpt), content=VALUES(content), date=VALUES(date), read_time=VALUES(read_time), category=VALUES(category), image=VALUES(image)
+            INSERT INTO blogs (id, title, excerpt, content, date, read_time, category, image, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE title=VALUES(title), excerpt=VALUES(excerpt), content=VALUES(content), date=VALUES(date), read_time=VALUES(read_time), category=VALUES(category), image=VALUES(image), status=VALUES(status)
         ');
-        $stmt->execute([$id, $title, $excerpt, $content, $date, $readTime, $category, $image]);
+        $stmt->execute([$id, $title, $excerpt, $content, $date, $readTime, $category, $image, $status]);
 
         jsonResponse(['success' => true]);
         break;

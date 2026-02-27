@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import DOMPurify from "dompurify";
 import { BlogPost } from "../types";
 import { Clock, Calendar, ArrowLeft, Sparkles } from "lucide-react";
+import { useSEO } from "../hooks/useSEO";
+import { BackgroundOrbs } from "./BackgroundOrbs";
 
 interface BlogDetailProps {
   post: BlogPost;
@@ -14,9 +16,38 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
   onBack,
   theme,
 }) => {
+  const progressBarRef = useRef<HTMLDivElement>(null);
+
+  // SEO meta tags
+  useSEO({
+    title: post.title,
+    description: post.excerpt,
+    image: post.image,
+    type: "article",
+  });
+
   // Scroll to top when mounted
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  // Okuma ilerleme çubuğu — DOM'a doğrudan yazarak sıfır re-render
+  useEffect(() => {
+    const updateProgress = () => {
+      const article = document.getElementById("blog-article");
+      const bar = progressBarRef.current;
+      if (!article || !bar) return;
+      const { top, height } = article.getBoundingClientRect();
+      const windowH = window.innerHeight;
+      const scrolled = Math.max(0, -top);
+      const total = height - windowH;
+      const pct = total > 0 ? Math.min(100, (scrolled / total) * 100) : 0;
+      bar.style.width = `${pct}%`;
+      bar.setAttribute("aria-valuenow", String(Math.round(pct)));
+    };
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+    return () => window.removeEventListener("scroll", updateProgress);
   }, []);
 
   const isProf = theme === "professional";
@@ -31,45 +62,25 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#06060e] text-gray-800 dark:text-gray-200 font-sans transition-colors duration-300">
+      {/* ===== Okuma İlerleme Çubuğu ===== */}
+      <div
+        ref={progressBarRef}
+        className="fixed top-0 left-0 z-[60] h-[3px] transition-[width] duration-100 ease-out"
+        style={{
+          width: "0%",
+          background: isProf
+            ? "linear-gradient(90deg, #06b6d4, #3b82f6)"
+            : "linear-gradient(90deg, #a855f7, #ec4899)",
+        }}
+        role="progressbar"
+        aria-valuenow={0}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Okuma ilerlemesi"
+      />
+
       {/* ===== Background Orbs ===== */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {isProf ? (
-          <>
-            <div
-              className="absolute -top-32 right-0 w-[500px] h-[500px] rounded-full opacity-[0.06] dark:opacity-[0.12] blur-[130px]"
-              style={{
-                background:
-                  "radial-gradient(circle, #06b6d4 0%, transparent 70%)",
-              }}
-            />
-            <div
-              className="absolute top-1/2 -left-40 w-[550px] h-[550px] rounded-full opacity-[0.05] dark:opacity-[0.10] blur-[120px]"
-              style={{
-                background:
-                  "radial-gradient(circle, #3b82f6 0%, transparent 70%)",
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <div
-              className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-[0.06] dark:opacity-[0.15] blur-[140px]"
-              style={{
-                background:
-                  "radial-gradient(circle, #a855f7 0%, transparent 70%)",
-              }}
-            />
-            <div
-              className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.10] blur-[120px]"
-              style={{
-                background:
-                  "radial-gradient(circle, #ec4899 0%, transparent 70%)",
-              }}
-            />
-          </>
-        )}
-      </div>
-      <div className="fixed inset-0 opacity-[0.04] dark:opacity-[0.02] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
+      <BackgroundOrbs theme={theme} />
 
       {/* ===== Navbar ===== */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#06060e]/70 backdrop-blur-xl border-b border-gray-200/60 dark:border-white/[0.06]">
@@ -106,6 +117,8 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
           <img
             src={post.image}
             alt={post.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
         ) : (
@@ -139,7 +152,10 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
       </div>
 
       {/* Content */}
-      <article className="relative z-10 max-w-3xl mx-auto px-6 py-12">
+      <article
+        id="blog-article"
+        className="relative z-10 max-w-3xl mx-auto px-6 py-12"
+      >
         <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-200 dark:border-gray-800">
           <span className="flex items-center gap-2">
             <Calendar className="w-4 h-4" /> {post.date}
@@ -159,16 +175,42 @@ export const BlogDetail: React.FC<BlogDetailProps> = ({
           {post.content ? (
             <div
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(post.content, {
-                  ADD_TAGS: ["video", "iframe"],
-                  ADD_ATTR: [
-                    "controls",
-                    "src",
-                    "allowfullscreen",
-                    "frameborder",
-                    "allow",
-                  ],
-                }),
+                __html: (() => {
+                  const clean = DOMPurify.sanitize(post.content, {
+                    ADD_TAGS: ["video", "iframe"],
+                    ADD_ATTR: [
+                      "controls",
+                      "src",
+                      "allowfullscreen",
+                      "frameborder",
+                      "allow",
+                    ],
+                  });
+                  // iframe src'yi güvenli domainlerle sınırla
+                  const ALLOWED_IFRAME_HOSTS = [
+                    "youtube.com",
+                    "youtube-nocookie.com",
+                    "youtu.be",
+                    "vimeo.com",
+                    "player.vimeo.com",
+                    "codepen.io",
+                    "codesandbox.io",
+                  ];
+                  const div = document.createElement("div");
+                  div.innerHTML = clean;
+                  div.querySelectorAll("iframe").forEach((iframe) => {
+                    try {
+                      const host = new URL(iframe.src).hostname;
+                      const allowed = ALLOWED_IFRAME_HOSTS.some(
+                        (d) => host === d || host.endsWith(`.${d}`),
+                      );
+                      if (!allowed) iframe.remove();
+                    } catch {
+                      iframe.remove();
+                    }
+                  });
+                  return div.innerHTML;
+                })(),
               }}
             />
           ) : (

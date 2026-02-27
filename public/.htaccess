@@ -1,0 +1,39 @@
+# BrowserRouter (History API) desteği için Apache URL rewrite
+
+# Vite build çıktısında dist/ klasörünün köküne kopyalanır.
+
+# Tüm bilinmeyen yollar index.html'e yönlendirilir; routing React tarafında yapılır.
+
+# Dizin listelemeyi KAPAT
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Alt dizinden sunuluyorsa RewriteBase'i ayarla
+  # Örn: /Next_Gen_Portfoillo/dist/ → RewriteBase /Next_Gen_Portfoillo/dist/
+  # Kök dizinden sunuluyorsa "/" yeterli
+  RewriteBase /
+
+# PHP API isteklerini doğrudan ilet
+
+RewriteRule ^php-api/ - [L]
+
+# Gerçek dosya veya klasörse dokunma
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Diğer her şeyi index.html'e yönlendir (SPA routing)
+
+RewriteRule ^ index.html [L]
+</IfModule>
+
+# Güvenlik başlıkları
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

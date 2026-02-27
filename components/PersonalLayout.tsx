@@ -105,6 +105,7 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
           style={{
             background: "radial-gradient(circle, #a855f7 0%, transparent 70%)",
             animation: "personalFloat1 14s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
         <div
@@ -112,6 +113,7 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
           style={{
             background: "radial-gradient(circle, #1DB954 0%, transparent 70%)",
             animation: "personalFloat2 18s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
         <div
@@ -119,6 +121,7 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
           style={{
             background: "radial-gradient(circle, #ec4899 0%, transparent 70%)",
             animation: "personalFloat3 16s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
       </div>
@@ -197,6 +200,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                             >
                               {playlist.image ? (
                                 <img
+                                  loading="lazy"
+                                  decoding="async"
                                   src={playlist.image}
                                   alt={playlist.name}
                                   className="w-11 h-11 rounded-lg shadow-sm object-cover"
@@ -245,6 +250,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                               {String(idx + 1).padStart(2, "0")}
                             </span>
                             <img
+                              loading="lazy"
+                              decoding="async"
                               src={track.albumArt}
                               alt={track.title}
                               className="w-12 h-12 rounded-lg shadow-sm object-cover"
@@ -289,6 +296,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                           >
                             <div className="relative mb-3">
                               <img
+                                loading="lazy"
+                                decoding="async"
                                 src={artist.image}
                                 alt={artist.name}
                                 className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-white/[0.08] group-hover/artist:border-fuchsia-400 dark:group-hover/artist:border-fuchsia-500/50 transition-colors shadow-md"
@@ -358,6 +367,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                     >
                       <div className="relative w-14 h-20 shrink-0 overflow-hidden rounded-lg">
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={movie.image}
                           alt={movie.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
@@ -424,6 +435,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                     >
                       <div className="relative w-14 h-20 shrink-0 overflow-hidden rounded-lg">
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={series.image}
                           alt={series.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
@@ -504,6 +517,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                     >
                       <div className="relative w-14 h-20 shrink-0 overflow-hidden rounded-lg">
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={movie.image}
                           alt={movie.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
@@ -567,6 +582,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                     >
                       <div className="relative w-14 h-20 shrink-0 overflow-hidden rounded-lg">
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={series.image}
                           alt={series.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
@@ -637,6 +654,8 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#06060e] via-transparent to-transparent z-10" />
                     {blog.image ? (
                       <img
+                        loading="lazy"
+                        decoding="async"
                         src={blog.image}
                         alt={blog.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-700"

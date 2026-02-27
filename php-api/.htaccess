@@ -1,15 +1,38 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  php-api — Güvenlik Kuralları                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Dizin listelemeyi KAPAT
+Options -Indexes
+
+# .env dosyasını engelle
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
 RewriteEngine On
 
 # Pass Authorization header to PHP
 RewriteCond %{HTTP:Authorization} .+
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-# Deny access to config.php
+# İç dosyalara doğrudan erişimi engelle (sadece API endpointleri açık)
+# config.php — veritabanı credentials
 <Files "config.php">
     Require all denied
 </Files>
 
-# Deny access to setup.php in production (remove the comment below)
-# <Files "setup.php">
-#     Require all denied
-# </Files>
+# helpers.php — sadece include ile kullanılmalı
+<Files "helpers.php">
+    Require all denied
+</Files>
+
+# setup.php — üretimde kesinlikle kapalı olmalı
+<Files "setup.php">
+    Require all denied
+</Files>
+
+# Dizine doğrudan erişildiğinde (GET /) 403 döndür
+# API endpointleri /php-api/auth.php gibi spesifik dosyalara gider
+RewriteCond %{REQUEST_URI} /php-api/?$
+RewriteRule ^ - [F,L]

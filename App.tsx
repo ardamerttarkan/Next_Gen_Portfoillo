@@ -1,20 +1,53 @@
-import React, { useState, useEffect } from "react";
-import { Landing } from "./views/Landing";
-import { PersonalLayout } from "./components/PersonalLayout";
-import { ProfessionalLayout } from "./components/ProfessionalLayout";
-import { AdminPanel } from "./components/AdminPanel";
-import { AdminLogin } from "./components/AdminLogin";
-import { BlogDetail } from "./components/BlogDetail";
-import { BlogList } from "./components/BlogList";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { ViewMode, AppData, BlogPost } from "./types";
 import { Home } from "lucide-react";
 import * as mockData from "./services/mockData";
 import {
   loadAllData,
+  loadAllDataAdmin,
   logout as apiLogout,
   isAuthenticated,
 } from "./services/api";
+import { useSEO } from "./hooks/useSEO";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+
+// ── Code splitting: her view kendi chunk'ında yüklenir ────────────────────────
+const Landing = lazy(() =>
+  import("./views/Landing").then((m) => ({ default: m.Landing })),
+);
+const PersonalLayout = lazy(() =>
+  import("./components/PersonalLayout").then((m) => ({
+    default: m.PersonalLayout,
+  })),
+);
+const ProfessionalLayout = lazy(() =>
+  import("./components/ProfessionalLayout").then((m) => ({
+    default: m.ProfessionalLayout,
+  })),
+);
+const AdminPanel = lazy(() =>
+  import("./components/AdminPanel").then((m) => ({ default: m.AdminPanel })),
+);
+const AdminLogin = lazy(() =>
+  import("./components/AdminLogin").then((m) => ({ default: m.AdminLogin })),
+);
+const BlogDetail = lazy(() =>
+  import("./components/BlogDetail").then((m) => ({ default: m.BlogDetail })),
+);
+const BlogList = lazy(() =>
+  import("./components/BlogList").then((m) => ({ default: m.BlogList })),
+);
+const NotFound = lazy(() =>
+  import("./components/NotFound").then((m) => ({ default: m.NotFound })),
+);
+
+/** Genel sayfa geçişlerinde gösterilen minimal fallback */
+const PageFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-[#06060e]">
+    <div className="w-8 h-8 rounded-full border-2 border-gray-300/40 dark:border-white/20 border-t-purple-500 dark:border-t-white animate-spin" />
+  </div>
+);
 
 /**
  * Generate a URL-friendly slug from a title (supports Turkish characters)
@@ -58,25 +91,38 @@ function findBlogBySlug(
   return allBlogs.find((item) => slugify(item.blog.title) === slug) || null;
 }
 
+/** Pathname'i ViewMode'a dönüştür (BrowserRouter desteği) */
+function pathToView(path: string): ViewMode {
+  const clean = path.replace(/^\//, "").replace(/\/$/, ""); // baştaki + sondaki / kaldir
+  if (clean.startsWith("blog/")) return "blog-detail";
+  if (clean === "admin") return "admin-login";
+  const valid: ViewMode[] = [
+    "landing",
+    "personal",
+    "professional",
+    "admin-login",
+    "personal-blog-list",
+    "professional-blog-list",
+  ];
+  if (valid.includes(clean as ViewMode)) return clean as ViewMode;
+  return clean === "" ? "landing" : "not-found";
+}
+
+/** Ana sayfaya dönüş butonu (sabit sağ alt köşe) */
+const BackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="fixed bottom-6 right-6 z-40 p-3 rounded-full shadow-xl transition-all duration-300 hover:scale-110 bg-white border border-gray-200 text-gray-700 hover:text-purple-600 hover:border-purple-200 dark:bg-white/[0.06] dark:backdrop-blur-xl dark:border-white/[0.1] dark:text-white dark:hover:text-cyan-400 dark:hover:border-cyan-500/30 dark:shadow-none"
+    title="Ana Sayfaya Dön"
+  >
+    <Home className="w-6 h-6" />
+  </button>
+);
+
 const App: React.FC = () => {
-  const [view, setView] = useState<ViewMode>(() => {
-    const hash = window.location.hash.replace("#", "");
-    // Blog slug route: #blog/my-post-slug
-    if (hash.startsWith("blog/")) return "blog-detail";
-    // Never allow direct access to admin via URL — require login flow
-    if (hash === "admin") return "admin-login";
-    const validViews: ViewMode[] = [
-      "landing",
-      "personal",
-      "professional",
-      "admin-login",
-      "personal-blog-list",
-      "professional-blog-list",
-    ];
-    return validViews.includes(hash as ViewMode)
-      ? (hash as ViewMode)
-      : "landing";
-  });
+  const [view, setView] = useState<ViewMode>(() =>
+    pathToView(window.location.pathname),
+  );
   const [transitioning, setTransitioning] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const stored = localStorage.getItem("darkMode");
@@ -108,9 +154,9 @@ const App: React.FC = () => {
       .then((apiData) => {
         setData(apiData);
         // Resolve blog slug from URL on initial load
-        const hash = window.location.hash.replace("#", "");
-        if (hash.startsWith("blog/")) {
-          const slug = hash.replace("blog/", "");
+        const path = window.location.pathname.replace(/^\//, "");
+        if (path.startsWith("blog/")) {
+          const slug = path.replace("blog/", "");
           const found = findBlogBySlug(
             slug,
             apiData.hobbyBlogs,
@@ -123,14 +169,37 @@ const App: React.FC = () => {
               found.theme === "professional" ? "professional" : "personal",
             );
           } else {
-            // Blog not found — go to landing
-            setView("landing");
-            window.location.hash = "landing";
+            setView("not-found");
           }
         }
       })
       .catch(console.error);
   }, []);
+
+  // Tarayıcı geri/ileri tuşları için popstate dinleyici
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace(/^\//, "");
+      if (path.startsWith("blog/")) {
+        const slug = path.replace("blog/", "");
+        const found = findBlogBySlug(slug, data.hobbyBlogs, data.techBlogs);
+        if (found) {
+          setSelectedBlog(found.blog);
+          setBlogTheme(found.theme);
+          setPreviousView(
+            found.theme === "professional" ? "professional" : "personal",
+          );
+          setView("blog-detail");
+        } else {
+          setView("not-found");
+        }
+        return;
+      }
+      setView(pathToView(path));
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [data]);
 
   // Handle Dark Mode
   useEffect(() => {
@@ -153,7 +222,8 @@ const App: React.FC = () => {
     setTransitioning(true);
     setTimeout(() => {
       setView(newView);
-      window.location.hash = newView;
+      const urlPath = newView === "landing" ? "/" : "/" + newView;
+      window.history.pushState({}, "", urlPath);
       setTransitioning(false);
       window.scrollTo(0, 0);
     }, 300);
@@ -168,21 +238,14 @@ const App: React.FC = () => {
     setTransitioning(true);
     setTimeout(() => {
       setView("blog-detail");
-      window.location.hash = `blog/${slugify(blog.title)}`;
+      window.history.pushState({}, "", `/blog/${slugify(blog.title)}`);
       setTransitioning(false);
       window.scrollTo(0, 0);
     }, 300);
   };
 
-  const BackButton = () => (
-    <button
-      onClick={() => handleViewChange("landing")}
-      className="fixed bottom-6 right-6 z-40 p-3 rounded-full shadow-xl transition-all duration-300 hover:scale-110 bg-white border border-gray-200 text-gray-700 hover:text-purple-600 hover:border-purple-200 dark:bg-white/[0.06] dark:backdrop-blur-xl dark:border-white/[0.1] dark:text-white dark:hover:text-cyan-400 dark:hover:border-cyan-500/30 dark:shadow-none"
-      title="Ana Sayfaya Dön"
-    >
-      <Home className="w-6 h-6" />
-    </button>
-  );
+  // Global SEO (sayfa başlığı varsayılan; BlogDetail kendi useSEO'sunu kullanır)
+  useSEO(view === "blog-detail" ? {} : { title: undefined });
 
   return (
     <div
@@ -202,97 +265,119 @@ const App: React.FC = () => {
       )}
 
       {/* --- VIEWS --- */}
+      <ErrorBoundary>
+        {view === "landing" && (
+          <Suspense fallback={<PageFallback />}>
+            <Landing
+              onSelect={handleViewChange}
+              onAdmin={() => handleViewChange("admin-login")}
+            />
+          </Suspense>
+        )}
 
-      {view === "landing" && (
-        <Landing
-          onSelect={handleViewChange}
-          onAdmin={() => handleViewChange("admin-login")}
-        />
-      )}
+        {view === "admin-login" && (
+          <Suspense fallback={<PageFallback />}>
+            <AdminLogin
+              onLogin={() => {
+                // Reload data from API after login (include drafts), then go to admin
+                loadAllDataAdmin().then(setData).catch(console.error);
+                handleViewChange("admin");
+              }}
+              onBack={() => handleViewChange("landing")}
+              autoLogin={isAuthenticated()}
+            />
+          </Suspense>
+        )}
 
-      {view === "admin-login" && (
-        <AdminLogin
-          onLogin={() => {
-            // Reload data from API after login, then go to admin
-            loadAllData().then(setData).catch(console.error);
-            handleViewChange("admin");
-          }}
-          onBack={() => handleViewChange("landing")}
-          autoLogin={isAuthenticated()}
-        />
-      )}
+        {view === "admin" && isAuthenticated() && (
+          <Suspense fallback={<PageFallback />}>
+            <AdminPanel
+              data={data}
+              updateData={setData}
+              onLogout={() => {
+                apiLogout();
+                loadAllData().then(setData).catch(console.error);
+                handleViewChange("landing");
+              }}
+              onGoHome={() => {
+                loadAllData().then(setData).catch(console.error);
+                handleViewChange("landing");
+              }}
+            />
+          </Suspense>
+        )}
 
-      {view === "admin" && isAuthenticated() && (
-        <AdminPanel
-          data={data}
-          updateData={setData}
-          onLogout={() => {
-            apiLogout();
-            handleViewChange("landing");
-          }}
-          onGoHome={() => handleViewChange("landing")}
-        />
-      )}
+        {/* Blog Detail View (Full Page) */}
+        {view === "blog-detail" && selectedBlog && (
+          <Suspense fallback={<PageFallback />}>
+            <BlogDetail
+              post={selectedBlog}
+              onBack={() => handleViewChange(previousView)}
+              theme={blogTheme}
+            />
+          </Suspense>
+        )}
+        {/* Blog slug çözümlenirken (data henüz yüklenmedi) loading göster */}
+        {view === "blog-detail" && !selectedBlog && <PageFallback />}
 
-      {/* Blog Detail View (Full Page) */}
-      {view === "blog-detail" && selectedBlog && (
-        <BlogDetail
-          post={selectedBlog}
-          onBack={() => handleViewChange(previousView)}
-          theme={blogTheme}
-        />
-      )}
+        {/* Professional Views */}
+        {view === "professional" && (
+          <Suspense fallback={<PageFallback />}>
+            <ProfessionalLayout
+              projects={data.projects}
+              skills={data.skills}
+              blogs={data.techBlogs}
+              career={data.career}
+              onBlogClick={(blog) => handleBlogClick(blog, "professional")}
+              onViewAllBlogs={() => handleViewChange("professional-blog-list")}
+            />
+            <BackButton onClick={() => handleViewChange("landing")} />
+          </Suspense>
+        )}
 
-      {/* Professional Views */}
-      {view === "professional" && (
-        <>
-          <ProfessionalLayout
-            projects={data.projects}
-            skills={data.skills}
-            blogs={data.techBlogs}
-            career={data.career}
-            onBlogClick={(blog) => handleBlogClick(blog, "professional")}
-            onViewAllBlogs={() => handleViewChange("professional-blog-list")}
-          />
-          <BackButton />
-        </>
-      )}
+        {view === "professional-blog-list" && (
+          <Suspense fallback={<PageFallback />}>
+            <BlogList
+              blogs={data.techBlogs}
+              onBack={() => handleViewChange("professional")}
+              onRead={(blog) => handleBlogClick(blog, "professional-blog-list")}
+              variant="professional"
+            />
+            <BackButton onClick={() => handleViewChange("landing")} />
+          </Suspense>
+        )}
 
-      {view === "professional-blog-list" && (
-        <>
-          <BlogList
-            blogs={data.techBlogs}
-            onBack={() => handleViewChange("professional")}
-            onRead={(blog) => handleBlogClick(blog, "professional-blog-list")}
-            variant="professional"
-          />
-          <BackButton />
-        </>
-      )}
+        {/* Personal Views */}
+        {view === "personal" && (
+          <Suspense fallback={<PageFallback />}>
+            <PersonalLayout
+              blogs={data.hobbyBlogs}
+              onBlogClick={(blog) => handleBlogClick(blog, "personal")}
+              onViewAllBlogs={() => handleViewChange("personal-blog-list")}
+            />
+            <BackButton onClick={() => handleViewChange("landing")} />
+          </Suspense>
+        )}
 
-      {/* Personal Views */}
-      {view === "personal" && (
-        <>
-          <PersonalLayout
-            blogs={data.hobbyBlogs}
-            onBlogClick={(blog) => handleBlogClick(blog, "personal")}
-            onViewAllBlogs={() => handleViewChange("personal-blog-list")}
-          />
-          <BackButton />
-        </>
-      )}
+        {view === "personal-blog-list" && (
+          <Suspense fallback={<PageFallback />}>
+            <BlogList
+              blogs={data.hobbyBlogs}
+              onBack={() => handleViewChange("personal")}
+              onRead={(blog) => handleBlogClick(blog, "personal-blog-list")}
+              variant="personal"
+            />
+            <BackButton onClick={() => handleViewChange("landing")} />
+          </Suspense>
+        )}
 
-      {view === "personal-blog-list" && (
-        <>
-          <BlogList
-            blogs={data.hobbyBlogs}
-            onBack={() => handleViewChange("personal")}
-            onRead={(blog) => handleBlogClick(blog, "personal-blog-list")}
-            variant="personal"
-          />
-          <BackButton />
-        </>
-      )}
+        {/* 404 Sayfa Bulunamadı */}
+        {view === "not-found" && (
+          <Suspense fallback={<PageFallback />}>
+            <NotFound onGoHome={() => handleViewChange("landing")} />
+          </Suspense>
+        )}
+      </ErrorBoundary>
     </div>
   );
 };

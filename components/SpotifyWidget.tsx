@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Play,
   SkipBack,
@@ -29,42 +29,54 @@ interface SpotifyWidgetProps {
  */
 export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({ nowPlaying }) => {
   /**
-   * progress: 0-100 arası yüzde
-   *
-   * Spotify bize progress_ms (şu anki pozisyon) ve duration_ms (toplam süre) veriyor.
-   * Yüzdeyi hesaplamak: (progress / duration) * 100
-   *
-   * Ayrıca her saniye client-side olarak artırıyoruz ki progress bar kesintisiz hareket etsin.
-   * (Spotify API'den sadece 30 saniyede bir güncelleme geliyor)
+   * progress bar DOM ref — React state'i kullanmıyoruz.
+   * Her saniyede React re-render tetiklemek yerine
+   * doğrudan DOM style'a yazıyoruz (rAF loop).
    */
-  const [progress, setProgress] = useState(0);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const sessionRef = useRef<{
+    startTime: number;
+    startPct: number;
+    msPerPct: number;
+  } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Spotify'dan gelen veri değiştiğinde progress'i güncelle
+  // Spotify'dan gelen veri değişince animasyonu yeniden başlat
   useEffect(() => {
-    if (
-      nowPlaying?.isPlaying &&
-      nowPlaying.progress_ms &&
-      nowPlaying.duration_ms
-    ) {
-      setProgress((nowPlaying.progress_ms / nowPlaying.duration_ms) * 100);
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(nowPlaying?.isPlaying ?? false);
+    const playing = nowPlaying?.isPlaying ?? false;
+    setIsPlaying(playing);
+
+    cancelAnimationFrame(rafRef.current);
+    sessionRef.current = null;
+
+    if (playing && nowPlaying?.progress_ms != null && nowPlaying?.duration_ms) {
+      const startPct = (nowPlaying.progress_ms / nowPlaying.duration_ms) * 100;
+      const msPerPct = nowPlaying.duration_ms / 100;
+
+      sessionRef.current = {
+        startTime: performance.now(),
+        startPct,
+        msPerPct,
+      };
+
+      const animate = (now: number) => {
+        const s = sessionRef.current;
+        if (!s || !progressBarRef.current) return;
+        const elapsed = now - s.startTime;
+        const pct = Math.min(100, s.startPct + elapsed / s.msPerPct);
+        progressBarRef.current.style.width = `${pct}%`;
+        if (pct < 100) rafRef.current = requestAnimationFrame(animate);
+      };
+
+      rafRef.current = requestAnimationFrame(animate);
+    } else if (progressBarRef.current) {
+      // Durduğunda veya veri yoksa 0'a sıfırla
+      progressBarRef.current.style.width = "0%";
     }
-  }, [nowPlaying]);
 
-  // Client-side animasyon: Her saniye progress bar'ı artır (gerçek Spotify verisi arasında)
-  useEffect(() => {
-    if (!isPlaying || !nowPlaying?.duration_ms) return;
-
-    const increment = (1000 / nowPlaying.duration_ms) * 100; // 1 saniyenin yüzde karşılığı
-    const interval = setInterval(() => {
-      setProgress((prev) => (prev >= 100 ? 0 : prev + increment));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, nowPlaying?.duration_ms]);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [nowPlaying?.isPlaying, nowPlaying?.progress_ms, nowPlaying?.duration_ms]);
 
   /**
    * formatTime: milisaniyeyi "dakika:saniye" formatına çevirir
@@ -147,8 +159,9 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({ nowPlaying }) => {
             <div className="mb-4">
               <div className="h-1 w-full bg-gray-200 dark:bg-white/[0.06] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full transition-all duration-500 ease-linear shadow-[0_0_6px_rgba(74,222,128,0.3)]"
-                  style={{ width: `${progress}%` }}
+                  ref={progressBarRef}
+                  className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full shadow-[0_0_6px_rgba(74,222,128,0.3)]"
+                  style={{ width: "0%" }}
                 />
               </div>
               <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-600 mt-1.5 font-mono">

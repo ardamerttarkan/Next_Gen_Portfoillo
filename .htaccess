@@ -1,0 +1,60 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  Proje Kökü — Güvenlik + SPA (BrowserRouter) Yönlendirmesi    ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# ───── 1. Dizin listelemeyi KAPAT ─────────────────────────────────
+Options -Indexes
+
+# ───── 2. Hassas dosya ve klasörlere erişimi ENGELLE ──────────────
+
+# .env (tüm varyasyonları), .git, .gitignore
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# TypeScript / JSX kaynak dosyaları
+<FilesMatch "\.(tsx?|jsx?)$">
+    Require all denied
+</FilesMatch>
+
+# Yapılandırma dosyaları
+<FilesMatch "^(package\.json|package-lock\.json|tsconfig\.json|vite\.config\.ts|metadata\.json)$">
+    Require all denied
+</FilesMatch>
+
+# node_modules, api (Express sunucu), hooks, services, views, components, types
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /Next_Gen_Portfoillo/
+
+  # node_modules — kesinlikle erişilemez
+  RewriteRule ^node_modules/ - [F,L]
+
+  # Kaynak kod dizinleri — sadece sunucu tarafında kullanılır
+  RewriteRule ^(api|hooks|services|views|components|types)/ - [F,L]
+
+  # ───── 3. PHP API isteklerini doğrudan ilet ──────────────────
+  # (php-api/.htaccess kendi güvenliğini sağlar)
+  RewriteRule ^php-api/ - [L]
+
+  # ───── 4. dist/ içindeki statik dosyalara (JS/CSS/img) izin ver ─
+  RewriteRule ^dist/ - [L]
+
+  # ───── 5. Gerçek dosyalar (index.html, img/, favicon vb.) ───────
+  # İzin verilen statik kaynaklar
+  RewriteRule ^img/ - [L]
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule \.(html|png|jpg|jpeg|gif|svg|ico|webp|woff2?|ttf|eot|css)$ - [L]
+
+  # ───── 6. SPA Fallback — Geri kalan her şeyi index.html'e yönlendir
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# ───── 7. Güvenlik başlıkları ─────────────────────────────────────
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

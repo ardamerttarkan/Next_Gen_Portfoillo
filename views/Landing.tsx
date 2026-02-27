@@ -34,6 +34,7 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
           style={{
             background: "radial-gradient(circle, #a855f7 0%, transparent 70%)",
             animation: "float1 12s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
         <div
@@ -41,6 +42,7 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
           style={{
             background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)",
             animation: "float2 15s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
         <div
@@ -48,6 +50,7 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
           style={{
             background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)",
             animation: "float3 10s ease-in-out infinite",
+            willChange: "transform",
           }}
         />
       </div>
@@ -104,60 +107,6 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
             loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          {/* ===== Personal Card ===== */}
-          <div
-            className="group relative cursor-pointer rounded-2xl overflow-hidden"
-            onMouseEnter={() => setHovered("personal")}
-            onMouseLeave={() => setHovered(null)}
-            onClick={() => onSelect("personal")}
-          >
-            {/* Card Glow */}
-            <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-purple-500/30 via-fuchsia-500/20 to-pink-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-[1px]" />
-
-            {/* Card Body */}
-            <div className="relative rounded-2xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.06] group-hover:border-purple-300 dark:group-hover:border-purple-500/30 p-7 sm:p-9 transition-all duration-500 shadow-sm dark:shadow-none group-hover:shadow-xl dark:group-hover:shadow-none group-hover:bg-purple-50/30 dark:group-hover:bg-white/[0.06]">
-              {/* Animated Gradient Accent */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-              {/* Icon */}
-              <div className="relative w-14 h-14 mb-7 rounded-xl bg-purple-50 dark:bg-gradient-to-br dark:from-purple-500/20 dark:to-fuchsia-500/20 border border-purple-200/60 dark:border-purple-500/20 flex items-center justify-center group-hover:shadow-[0_0_30px_rgba(168,85,247,0.12)] dark:group-hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] transition-all duration-500">
-                <User className="w-6 h-6 text-purple-500 dark:text-purple-400" />
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-5">
-                {["Müzik", "Filmler", "Hobiler"].map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-300/80 border border-purple-200/60 dark:border-purple-500/10"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Title & Description */}
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
-                Kişisel
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-8 max-w-xs">
-                Spotify Hareketim ve Çalma Listelerim, Film ve Dizi Tercihlerim,
-                ve genel blog yazılarım. Biraz kişisel
-              </p>
-
-              {/* CTA */}
-              <div className="flex items-center gap-2 text-sm font-medium text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
-                <span>Keşfet</span>
-                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300" />
-              </div>
-
-              {/* Decorative floating icon */}
-              <div className="absolute bottom-6 right-6 opacity-[0.03] dark:opacity-[0.04] group-hover:opacity-[0.06] dark:group-hover:opacity-[0.08] transition-opacity duration-500">
-                <Music className="w-24 h-24 text-purple-400 dark:text-purple-300" />
-              </div>
-            </div>
-          </div>
-
           {/* ===== Professional Card ===== */}
           <div
             className="group relative cursor-pointer rounded-2xl overflow-hidden"
@@ -208,6 +157,60 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
               {/* Decorative floating icon */}
               <div className="absolute bottom-6 right-6 opacity-[0.03] dark:opacity-[0.04] group-hover:opacity-[0.06] dark:group-hover:opacity-[0.08] transition-opacity duration-500">
                 <Code2 className="w-24 h-24 text-cyan-400 dark:text-cyan-300" />
+              </div>
+            </div>
+          </div>
+
+          {/* ===== Personal Card ===== */}
+          <div
+            className="group relative cursor-pointer rounded-2xl overflow-hidden"
+            onMouseEnter={() => setHovered("personal")}
+            onMouseLeave={() => setHovered(null)}
+            onClick={() => onSelect("personal")}
+          >
+            {/* Card Glow */}
+            <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-purple-500/30 via-fuchsia-500/20 to-pink-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-[1px]" />
+
+            {/* Card Body */}
+            <div className="relative rounded-2xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.06] group-hover:border-purple-300 dark:group-hover:border-purple-500/30 p-7 sm:p-9 transition-all duration-500 shadow-sm dark:shadow-none group-hover:shadow-xl dark:group-hover:shadow-none group-hover:bg-purple-50/30 dark:group-hover:bg-white/[0.06]">
+              {/* Animated Gradient Accent */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              {/* Icon */}
+              <div className="relative w-14 h-14 mb-7 rounded-xl bg-purple-50 dark:bg-gradient-to-br dark:from-purple-500/20 dark:to-fuchsia-500/20 border border-purple-200/60 dark:border-purple-500/20 flex items-center justify-center group-hover:shadow-[0_0_30px_rgba(168,85,247,0.12)] dark:group-hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] transition-all duration-500">
+                <User className="w-6 h-6 text-purple-500 dark:text-purple-400" />
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                {["Müzik", "Filmler", "Hobiler"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-300/80 border border-purple-200/60 dark:border-purple-500/10"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Title & Description */}
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
+                Kişisel
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-8 max-w-xs">
+                Spotify Hareketim ve Çalma Listelerim, Film ve Dizi Tercihlerim,
+                ve genel blog yazılarım. Biraz kişisel
+              </p>
+
+              {/* CTA */}
+              <div className="flex items-center gap-2 text-sm font-medium text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+                <span>Keşfet</span>
+                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300" />
+              </div>
+
+              {/* Decorative floating icon */}
+              <div className="absolute bottom-6 right-6 opacity-[0.03] dark:opacity-[0.04] group-hover:opacity-[0.06] dark:group-hover:opacity-[0.08] transition-opacity duration-500">
+                <Music className="w-24 h-24 text-purple-400 dark:text-purple-300" />
               </div>
             </div>
           </div>

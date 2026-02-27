@@ -33,10 +33,10 @@ if ($existing) {
     // Update password
     $stmt = $db->prepare('UPDATE admins SET password = ? WHERE username = ?');
     $stmt->execute([$hashedPassword, 'admin']);
-    echo json_encode(['status' => 'Admin password updated', 'username' => 'admin', 'password' => 'admin123']);
+    echo json_encode(['status' => 'Admin password updated', 'username' => 'admin']);
 } else {
     // Insert
     $stmt = $db->prepare('INSERT INTO admins (username, password) VALUES (?, ?)');
     $stmt->execute(['admin', $hashedPassword]);
-    echo json_encode(['status' => 'Admin created', 'username' => 'admin', 'password' => 'admin123']);
+    echo json_encode(['status' => 'Admin created', 'username' => 'admin', 'note' => 'Default password set — change it immediately via admin panel.']);
 }

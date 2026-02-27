@@ -53,15 +53,28 @@ if (!$jwtSecret) {
 }
 define('SECRET_KEY', $jwtSecret);
 
+/**
+ * URL-safe Base64 encode (JWT standard: no padding, + → -, / → _)
+ */
+function base64url_encode(string $data): string
+{
+    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+}
+
+function base64url_decode(string $data): string
+{
+    return base64_decode(strtr($data, '-_', '+/'));
+}
+
 function generateToken(int $adminId, string $username): string
 {
-    $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-    $payload = base64_encode(json_encode([
+    $header = base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+    $payload = base64url_encode(json_encode([
         'id' => $adminId,
         'username' => $username,
         'exp' => time() + (24 * 60 * 60), // 24 hours
     ]));
-    $signature = hash_hmac('sha256', "$header.$payload", SECRET_KEY);
+    $signature = base64url_encode(hash_hmac('sha256', "$header.$payload", SECRET_KEY, true));
     return "$header.$payload.$signature";
 }
 
@@ -90,12 +103,12 @@ function verifyToken(): array|false
     [$header, $payload, $signature] = $parts;
 
     // Verify signature
-    $expectedSig = hash_hmac('sha256', "$header.$payload", SECRET_KEY);
+    $expectedSig = base64url_encode(hash_hmac('sha256', "$header.$payload", SECRET_KEY, true));
     if (!hash_equals($expectedSig, $signature))
         return false;
 
     // Decode payload
-    $data = json_decode(base64_decode($payload), true);
+    $data = json_decode(base64url_decode($payload), true);
     if (!$data)
         return false;
 

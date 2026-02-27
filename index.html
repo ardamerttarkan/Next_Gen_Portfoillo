@@ -4,6 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ben, Arda!</title>
+    <meta
+      name="description"
+      content="Arda Mert Tarkan'ın kişisel ve profesyonel portfolyosu — teknoloji, tasarım ve hayat."
+    />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Arda Mert Tarkan" />
+    <meta
+      property="og:description"
+      content="Arda Mert Tarkan'ın kişisel ve profesyonel portfolyosu — teknoloji, tasarım ve hayat."
+    />
+    <meta property="og:image" content="/img/og-default.png" />
+    <meta property="og:site_name" content="Arda Mert Tarkan" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Arda Mert Tarkan" />
+    <meta
+      name="twitter:description"
+      content="Arda Mert Tarkan'ın kişisel ve profesyonel portfolyosu."
+    />
+    <meta name="twitter:image" content="/img/og-default.png" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap"
@@ -30,6 +51,15 @@
                 slate: "#0f172a",
                 blue: "#3b82f6",
               },
+            },
+            keyframes: {
+              shimmer: {
+                "0%": { transform: "translateX(-100%)" },
+                "100%": { transform: "translateX(100%)" },
+              },
+            },
+            animation: {
+              shimmer: "shimmer 1.5s infinite",
             },
           },
         },

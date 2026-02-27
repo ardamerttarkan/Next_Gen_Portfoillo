@@ -29,7 +29,9 @@ export function isAuthenticated(): boolean {
       setToken(null);
       return false;
     }
-    const payload = JSON.parse(atob(parts[1]));
+    // base64url → base64 dönüşümü (JWT standardı)
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(b64));
     if (payload.exp && payload.exp < Date.now() / 1000) {
       setToken(null);
       return false;
@@ -128,6 +130,10 @@ export async function getProjects(): Promise<Project[]> {
   return apiFetch<Project[]>("projects.php");
 }
 
+export async function getAllProjects(): Promise<Project[]> {
+  return apiFetch<Project[]>("projects.php?status=all");
+}
+
 export async function createProject(
   project: Omit<Project, "id"> & { id?: string },
 ): Promise<{ success: boolean; id: string }> {
@@ -159,6 +165,13 @@ export async function getBlogs(
   category?: "tech" | "hobby",
 ): Promise<BlogPost[]> {
   const query = category ? `?category=${category}` : "";
+  return apiFetch<BlogPost[]>(`blogs.php${query}`);
+}
+
+export async function getAllBlogs(
+  category?: "tech" | "hobby",
+): Promise<BlogPost[]> {
+  const query = category ? `?category=${category}&status=all` : "?status=all";
   return apiFetch<BlogPost[]>(`blogs.php${query}`);
 }
 
@@ -300,5 +313,38 @@ export async function loadAllData(): Promise<AppData> {
       skills: mockData.skills,
       career: mockData.career,
     };
+  }
+}
+
+/**
+ * Load all portfolio data for admin panel (includes draft items).
+ */
+export async function loadAllDataAdmin(): Promise<AppData> {
+  try {
+    const [projects, techBlogs, hobbyBlogs, skills, career] = await Promise.all(
+      [
+        getAllProjects(),
+        getAllBlogs("tech"),
+        getAllBlogs("hobby"),
+        getSkills(),
+        getCareer(),
+      ],
+    );
+
+    return {
+      projects,
+      techBlogs,
+      hobbyBlogs,
+      skills,
+      career,
+      currentSong: mockData.currentSong,
+      playlists: mockData.playlists,
+      topTracks: mockData.topTracks,
+      favoriteMovies: mockData.favoriteMovies,
+      recentSeries: mockData.recentSeries,
+    };
+  } catch (err) {
+    console.warn("Failed to load admin data from API:", err);
+    return loadAllData();
   }
 }
