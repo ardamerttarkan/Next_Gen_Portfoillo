@@ -1,5 +1,5 @@
-import React from "react";
-import { Project, Skill, BlogPost, CareerItem } from "../types";
+import React, { useState } from "react";
+import { Project, Skill, BlogPost, CareerItem, VolunteerItem } from "../types";
 import {
   Github,
   Linkedin,
@@ -19,13 +19,17 @@ import {
   Laptop,
   MapPin,
   Calendar,
+  Heart,
+  Mail,
 } from "lucide-react";
+import ContactForm from "./ContactForm";
 
 interface ProfessionalLayoutProps {
   projects: Project[];
   skills: Skill[];
   blogs: BlogPost[];
   career: CareerItem[];
+  volunteer: VolunteerItem[];
   onBlogClick: (blog: BlogPost) => void;
   onViewAllBlogs: () => void;
 }
@@ -35,9 +39,12 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
   skills,
   blogs,
   career,
+  volunteer,
   onBlogClick,
   onViewAllBlogs,
 }) => {
+  const [showContactForm, setShowContactForm] = useState(false);
+  
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -99,6 +106,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
               { label: "Kariyer", id: "career" },
               { label: "Projeler", id: "projects" },
               { label: "Blog", id: null, action: onViewAllBlogs },
+              { label: "İletişim", id: null, action: () => setShowContactForm(true) },
             ].map((item) => (
               <button
                 key={item.label}
@@ -169,7 +177,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                 decoding="async"
                 src="../img/me.jpg"
                 alt="Workspace"
-                className="w-full aspect-square object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                className="w-full aspect-square object-cover transition-all duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#f8fafc] dark:from-[#06060e] via-transparent to-transparent opacity-60" />
             </div>
@@ -248,21 +256,14 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
 
             <div className="space-y-4">
               {skills.map((skill) => (
-                <div key={skill.name} className="group">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {skill.name}
-                    </span>
-                    <span className="text-sm text-gray-400 dark:text-gray-600 font-mono">
-                      {skill.level}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-100 dark:bg-white/[0.04] rounded-full h-2 overflow-hidden border border-gray-200/40 dark:border-white/[0.04]">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(6,182,212,0.3)]"
-                      style={{ width: `${skill.level}%` }}
-                    />
-                  </div>
+                <div
+                  key={skill.name}
+                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-cyan-300 dark:hover:border-cyan-500/30 hover:bg-cyan-50/30 dark:hover:bg-white/[0.05] transition-all duration-300"
+                >
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                    {skill.name}
+                  </span>
                 </div>
               ))}
             </div>
@@ -492,6 +493,211 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           })()}
         </section>
 
+        {/* ===== Volunteer Section ===== */}
+        <section id="volunteer">
+          <div className="flex items-center gap-4 mb-12">
+            <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-500/10 border border-pink-200/60 dark:border-pink-500/20 flex items-center justify-center">
+              <Heart className="text-pink-500 dark:text-pink-400 w-5 h-5" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Gönüllü Çalışmalar
+            </h2>
+            <div className="h-px flex-1 bg-gray-200 dark:bg-white/[0.06]" />
+          </div>
+
+          {(() => {
+            const typeConfig = [
+              {
+                key: "club" as const,
+                label: "Kulüp",
+                icon: Heart,
+                colors: {
+                  bg: "bg-pink-50 dark:bg-pink-500/10",
+                  border: "border-pink-200/60 dark:border-pink-500/20",
+                  text: "text-pink-500 dark:text-pink-400",
+                  badge:
+                    "bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-200/60 dark:border-pink-500/30",
+                  dot: "bg-pink-500",
+                  line: "from-pink-200 via-pink-100 to-transparent dark:from-pink-500/30 dark:via-pink-500/10 dark:to-transparent",
+                },
+              },
+              {
+                key: "community" as const,
+                label: "Topluluk",
+                icon: Globe,
+                colors: {
+                  bg: "bg-violet-50 dark:bg-violet-500/10",
+                  border: "border-violet-200/60 dark:border-violet-500/20",
+                  text: "text-violet-500 dark:text-violet-400",
+                  badge:
+                    "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200/60 dark:border-violet-500/30",
+                  dot: "bg-violet-500",
+                  line: "from-violet-200 via-violet-100 to-transparent dark:from-violet-500/30 dark:via-violet-500/10 dark:to-transparent",
+                },
+              },
+              {
+                key: "event" as const,
+                label: "Etkinlik",
+                icon: Calendar,
+                colors: {
+                  bg: "bg-amber-50 dark:bg-amber-500/10",
+                  border: "border-amber-200/60 dark:border-amber-500/20",
+                  text: "text-amber-500 dark:text-amber-400",
+                  badge:
+                    "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-500/30",
+                  dot: "bg-amber-500",
+                  line: "from-amber-200 via-amber-100 to-transparent dark:from-amber-500/30 dark:via-amber-500/10 dark:to-transparent",
+                },
+              },
+              {
+                key: "other" as const,
+                label: "Diğer",
+                icon: Sparkles,
+                colors: {
+                  bg: "bg-gray-50 dark:bg-gray-500/10",
+                  border: "border-gray-200/60 dark:border-gray-500/20",
+                  text: "text-gray-500 dark:text-gray-400",
+                  badge:
+                    "bg-gray-50 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-200/60 dark:border-gray-500/30",
+                  dot: "bg-gray-500",
+                  line: "from-gray-200 via-gray-100 to-transparent dark:from-gray-500/30 dark:via-gray-500/10 dark:to-transparent",
+                },
+              },
+            ];
+
+            return (
+              <div className="space-y-10">
+                {typeConfig.map(({ key, label, icon: TypeIcon, colors }) => {
+                  const items = volunteer.filter((v) => v.type === key);
+                  if (items.length === 0) return null;
+
+                  return (
+                    <div key={key}>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div
+                          className={`w-8 h-8 rounded-lg ${colors.bg} border ${colors.border} flex items-center justify-center`}
+                        >
+                          <TypeIcon className={`w-4 h-4 ${colors.text}`} />
+                        </div>
+                        <h3 className="font-display text-lg font-bold text-gray-800 dark:text-gray-200">
+                          {label}
+                        </h3>
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${colors.badge}`}
+                        >
+                          {items.length}
+                        </span>
+                      </div>
+
+                      <div className="relative ml-4">
+                        <div
+                          className={`absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b ${colors.line}`}
+                        />
+
+                        <div className="space-y-6">
+                          {items.map((item) => {
+                            const formatDate = (d: string) => {
+                              if (!d) return "Devam Ediyor";
+                              const [y, m] = d.split("-");
+                              const months = [
+                                "Oca",
+                                "Şub",
+                                "Mar",
+                                "Nis",
+                                "May",
+                                "Haz",
+                                "Tem",
+                                "Ağu",
+                                "Eyl",
+                                "Eki",
+                                "Kas",
+                                "Ara",
+                              ];
+                              return `${months[parseInt(m) - 1]} ${y}`;
+                            };
+
+                            return (
+                              <div
+                                key={item.id}
+                                className="relative pl-8 group"
+                              >
+                                <div
+                                  className={`absolute left-0 top-3 w-2.5 h-2.5 rounded-full ${colors.dot} ring-4 ring-white dark:ring-[#06060e] z-10 group-hover:scale-125 transition-transform`}
+                                />
+
+                                <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-gray-300 dark:hover:border-white/[0.12] hover:bg-gray-50/50 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-all duration-300">
+                                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
+                                    <div>
+                                      <h4 className="font-bold text-gray-900 dark:text-white text-[15px] group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+                                        {item.title}
+                                      </h4>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                                        {item.organization}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                      {item.location && (
+                                        <span className="flex items-center gap-1">
+                                          <MapPin className="w-3.5 h-3.5" />
+                                          {item.location}
+                                        </span>
+                                      )}
+                                      <span className="flex items-center gap-1">
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        {formatDate(item.startDate)} —{" "}
+                                        {formatDate(item.endDate)}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {item.description && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                                      {item.description}
+                                    </p>
+                                  )}
+
+                                  {item.techStack && item.techStack.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-3">
+                                      {item.techStack.map((tag) => (
+                                        <span
+                                          key={tag}
+                                          className="px-2 py-0.5 bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400 text-[11px] rounded-full border border-gray-200/60 dark:border-white/[0.06]"
+                                        >
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {!item.endDate && (
+                                    <div className="mt-3 flex items-center gap-1.5">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                      <span className="text-[11px] font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">
+                                        Aktif
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {volunteer.length === 0 && (
+                  <div className="text-center py-12 text-gray-400 dark:text-gray-600">
+                    <Heart className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">Henüz gönüllü çalışma eklenmemiş.</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </section>
+
         {/* ===== Projects Section ===== */}
         <section id="projects">
           <div className="flex items-center gap-4 mb-12">
@@ -651,6 +857,22 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           </p>
         </footer>
       </main>
+
+      {/* ===== Contact Form Modal ===== */}
+      <ContactForm 
+        isOpen={showContactForm} 
+        onClose={() => setShowContactForm(false)}
+        calendlyUrl="https://calendly.com/ardamert60" // Calendly URL'nizi buraya ekleyin
+      />
+
+      {/* ===== Floating Contact Button ===== */}
+      <button
+        onClick={() => setShowContactForm(true)}
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full shadow-lg shadow-cyan-500/25 flex items-center justify-center hover:scale-110 hover:shadow-xl hover:shadow-cyan-500/30 transition-all duration-300"
+        title="İletişim"
+      >
+        <Mail className="w-6 h-6" />
+      </button>
 
       {/* ===== Keyframe Animations ===== */}
       <style>{`

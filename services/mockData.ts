@@ -5,6 +5,7 @@ import {
   Project,
   Skill,
   Song,
+  VolunteerItem,
 } from "../types";
 
 export const currentSong: Song = {
@@ -271,3 +272,5 @@ export const career: CareerItem[] = [
     techStack: ["Vue.js", "PHP", "MySQL", "WordPress"],
   },
 ];
+
+export const volunteer: VolunteerItem[] = [];

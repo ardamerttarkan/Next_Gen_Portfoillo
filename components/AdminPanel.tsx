@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AppData, Project, BlogPost, Skill, CareerItem } from "../types";
+import { AppData, Project, BlogPost, Skill, CareerItem, VolunteerItem, ContactMessage } from "../types";
 import { RichTextEditor } from "./RichTextEditor";
 import * as api from "../services/api";
 import {
@@ -32,6 +32,9 @@ import {
   Eye,
   EyeOff,
   Shield,
+  Heart,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
 
 interface AdminPanelProps {
@@ -48,8 +51,10 @@ type Tab =
   | "hobbyBlogs"
   | "skills"
   | "career"
+  | "volunteer"
+  | "messages"
   | "settings";
-type EditingItem = Project | BlogPost | Skill | CareerItem | null;
+type EditingItem = Project | BlogPost | Skill | CareerItem | VolunteerItem | null;
 
 // Standard Input Style
 const INPUT_CLASS =
@@ -64,6 +69,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Contact messages state
+  const [messages, setMessages] = useState<api.ContactMessage[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
 
   // Editor State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,6 +90,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  
+  // Load messages when tab changes
+  useEffect(() => {
+    if (activeTab === "messages") {
+      loadMessages();
+    }
+  }, [activeTab]);
+  
+  const loadMessages = async () => {
+    setMessagesLoading(true);
+    try {
+      const data = await api.getContactMessages();
+      setMessages(data);
+    } catch (err) {
+      console.error("Failed to load messages:", err);
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+  
+  const handleMarkRead = async (id: number, isRead: boolean) => {
+    try {
+      await api.markMessageRead(id, isRead);
+      setMessages(msgs => msgs.map(m => m.id === id ? { ...m, is_read: isRead } : m));
+    } catch (err) {
+      console.error("Failed to mark message:", err);
+    }
+  };
+  
+  const handleDeleteMessage = async (id: number) => {
+    if (!confirm("Bu mesajı silmek istediğinize emin misiniz?")) return;
+    try {
+      await api.deleteContactMessage(id);
+      setMessages(msgs => msgs.filter(m => m.id !== id));
+    } catch (err) {
+      console.error("Failed to delete message:", err);
+    }
+  };
 
   const handleDelete = async (key: keyof AppData, id: string | number) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
@@ -95,6 +142,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         await api.deleteSkill(String(id));
       } else if (key === "career") {
         await api.deleteCareer(String(id));
+      } else if (key === "volunteer") {
+        await api.deleteVolunteer(String(id));
       }
 
       // Update local state
@@ -133,13 +182,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         if (key === "skills") {
           await api.updateSkill((editingItem as Skill).name, formData);
         } else {
-          const itemId = (editingItem as Project | BlogPost | CareerItem).id;
+          const itemId = (editingItem as Project | BlogPost | CareerItem | VolunteerItem).id;
           if (key === "projects") {
             await api.updateProject(itemId, formData);
           } else if (key === "techBlogs" || key === "hobbyBlogs") {
             await api.updateBlog(itemId, formData);
           } else if (key === "career") {
             await api.updateCareer(itemId, formData);
+          } else if (key === "volunteer") {
+            await api.updateVolunteer(itemId, formData);
           }
         }
 
@@ -149,7 +200,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               ? { ...item, ...formData }
               : item;
           }
-          const itemId = (editingItem as Project | BlogPost | CareerItem).id;
+          const itemId = (editingItem as Project | BlogPost | CareerItem | VolunteerItem).id;
           return item.id === itemId ? { ...item, ...formData } : item;
         });
         updateData({ ...data, [key]: newList });
@@ -168,6 +219,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           await api.createSkill(newItem);
         } else if (key === "career") {
           await api.createCareer(newItem);
+        } else if (key === "volunteer") {
+          await api.createVolunteer(newItem);
         }
 
         const newList = [newItem, ...currentList];
@@ -289,6 +342,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             active={activeTab === "career"}
             collapsed={!isSidebarOpen}
             onClick={() => setActiveTab("career")}
+          />
+          <SidebarBtn
+            icon={Heart}
+            label="Volunteer"
+            active={activeTab === "volunteer"}
+            collapsed={!isSidebarOpen}
+            onClick={() => setActiveTab("volunteer")}
+          />
+          <SidebarBtn
+            icon={MessageCircle}
+            label="Mesajlar"
+            active={activeTab === "messages"}
+            collapsed={!isSidebarOpen}
+            onClick={() => setActiveTab("messages")}
           />
 
           <div
@@ -447,7 +514,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {activeTab !== "dashboard" && activeTab !== "settings" && (
+          {activeTab !== "dashboard" && activeTab !== "settings" && activeTab !== "messages" && (
             <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
@@ -477,14 +544,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           key={idx}
                           className="bg-gray-900 border border-gray-800 p-5 rounded-xl flex items-center justify-between group hover:border-prof-blue/50 transition-colors"
                         >
-                          <div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-prof-blue" />
                             <h3 className="font-bold text-lg">{skill.name}</h3>
-                            <div className="w-32 bg-gray-700 h-1.5 rounded-full mt-2">
-                              <div
-                                className="bg-prof-blue h-1.5 rounded-full"
-                                style={{ width: `${skill.level}%` }}
-                              ></div>
-                            </div>
                           </div>
                           <div className="flex gap-2">
                             <button
@@ -587,6 +649,149 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       })}
                     </div>
                   )
+                ) : activeTab === "volunteer" ? (
+                  data.volunteer.length === 0 ? (
+                    <EmptyState label="Volunteer" />
+                  ) : (
+                    <div className="space-y-4">
+                      {data.volunteer.map((item) => {
+                        const typeLabels: Record<string, string> = {
+                          club: "Kulüp",
+                          community: "Topluluk",
+                          event: "Etkinlik",
+                          other: "Diğer",
+                        };
+                        const typeColors: Record<string, string> = {
+                          club: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+                          community:
+                            "bg-violet-500/10 text-violet-400 border-violet-500/20",
+                          event:
+                            "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                          other:
+                            "bg-gray-500/10 text-gray-400 border-gray-500/20",
+                        };
+                        return (
+                          <div
+                            key={item.id}
+                            className="bg-gray-900 p-4 sm:p-5 rounded-xl border border-gray-800 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center group hover:border-gray-700 transition-all"
+                          >
+                            <div className="hidden sm:flex w-14 h-14 bg-gray-800 rounded-xl items-center justify-center shrink-0">
+                              <Heart className="w-6 h-6 text-pink-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className="font-bold text-lg truncate text-white">
+                                  {item.title}
+                                </h3>
+                                <span
+                                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${typeColors[item.type] || typeColors.other}`}
+                                >
+                                  {typeLabels[item.type] || item.type}
+                                </span>
+                                {!item.endDate && (
+                                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-emerald-400">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    Aktif
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-gray-400 text-sm mb-1">
+                                {item.organization}
+                                {item.location ? ` · ${item.location}` : ""}
+                              </p>
+                              <p className="text-gray-500 text-xs">
+                                {item.startDate} —{" "}
+                                {item.endDate || "Devam Ediyor"}
+                              </p>
+                              {item.techStack && item.techStack.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {item.techStack.map((t) => (
+                                    <span
+                                      key={t}
+                                      className="px-2 py-0.5 bg-gray-800 text-gray-400 text-[11px] rounded border border-gray-700"
+                                    >
+                                      {t}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                              <button
+                                onClick={() => handleEdit(item, "volunteer")}
+                                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete("volunteer", item.id)}
+                                className="px-3 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )
+                ) : activeTab === "messages" ? (
+                  <div className="space-y-4">
+                    {messagesLoading ? (
+                      <div className="flex justify-center py-12">
+                        <div className="w-8 h-8 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin" />
+                      </div>
+                    ) : messages.length === 0 ? (
+                      <EmptyState label="Mesaj" />
+                    ) : (
+                      messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`bg-gray-900 p-4 sm:p-5 rounded-xl border ${msg.is_read ? 'border-gray-800' : 'border-cyan-500/50 bg-gray-900/80'} flex flex-col gap-3 group hover:border-gray-700 transition-all`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                {!msg.is_read && (
+                                  <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
+                                )}
+                                <h4 className="font-semibold text-white">{msg.name}</h4>
+                                <span className="text-gray-500 text-sm">({msg.email})</span>
+                              </div>
+                              <p className="text-cyan-400 text-sm font-medium mb-2">{msg.subject}</p>
+                              <p className="text-gray-300 text-sm whitespace-pre-wrap">{msg.message}</p>
+                              <p className="text-gray-600 text-xs mt-2">
+                                {new Date(msg.created_at).toLocaleString('tr-TR')}
+                              </p>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={() => handleMarkRead(msg.id, !msg.is_read)}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${msg.is_read ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30'}`}
+                                title={msg.is_read ? "Okunmadı olarak işaretle" : "Okundu olarak işaretle"}
+                              >
+                                {msg.is_read ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                className="px-3 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                                title="Sil"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                              <a
+                                href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
+                                className="px-3 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors text-center"
+                                title="Yanıtla"
+                              >
+                                <Mail className="w-4 h-4" />
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 ) : (data[activeTab] as any[]).length === 0 ? (
                   <EmptyState
                     label={activeTab.replace(/([A-Z])/g, " $1").trim()}
@@ -718,12 +923,23 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           liveUrl: "",
           status: "active",
         });
-      else if (type === "skills") setFormData({ name: "", level: 50 });
+      else if (type === "skills") setFormData({ name: "" });
       else if (type === "career")
         setFormData({
           type: "work",
           title: "",
           company: "",
+          location: "",
+          startDate: "",
+          endDate: "",
+          description: "",
+          techStack: [],
+        });
+      else if (type === "volunteer")
+        setFormData({
+          type: "club",
+          title: "",
+          organization: "",
           location: "",
           startDate: "",
           endDate: "",
@@ -806,7 +1022,9 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
                 ? "Project"
                 : type === "career"
                   ? "Career Item"
-                  : "Post"}
+                  : type === "volunteer"
+                    ? "Volunteer Item"
+                    : "Post"}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white">
             <X className="w-6 h-6" />
@@ -820,7 +1038,9 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
                 ? "Skill Name"
                 : type === "career"
                   ? "Pozisyon / Ünvan"
-                  : "Title"
+                  : type === "volunteer"
+                    ? "Görev / Rol"
+                    : "Title"
             }
           >
             <input
@@ -836,7 +1056,9 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
               placeholder={
                 type === "career"
                   ? "Ör: Full-Stack Developer"
-                  : "Enter title..."
+                  : type === "volunteer"
+                    ? "Ör: Etkinlik Koordinatörü"
+                    : "Enter title..."
               }
             />
           </InputGroup>
@@ -870,20 +1092,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
             </InputGroup>
           )}
 
-          {type === "skills" ? (
-            <InputGroup label={`Proficiency Level: ${formData.level}%`}>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={formData.level || 0}
-                onChange={(e) =>
-                  handleChange("level", parseInt(e.target.value))
-                }
-                className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-prof-blue"
-              />
-            </InputGroup>
-          ) : type === "career" ? (
+          {type === "skills" ? null : type === "career" ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <InputGroup label="Şirket / Kurum">
@@ -967,6 +1176,95 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
                     onKeyDown={handleTagInput}
                     className={`${INPUT_CLASS} pl-10`}
                     placeholder="Teknoloji ekle..."
+                  />
+                </div>
+              </InputGroup>
+            </>
+          ) : type === "volunteer" ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <InputGroup label="Kuruluş / Organizasyon">
+                  <input
+                    type="text"
+                    value={formData.organization || ""}
+                    onChange={(e) => handleChange("organization", e.target.value)}
+                    className={INPUT_CLASS}
+                    placeholder="Ör: Yazılım Kulübü"
+                  />
+                </InputGroup>
+                <InputGroup label="Tür">
+                  <select
+                    value={formData.type || "club"}
+                    onChange={(e) => handleChange("type", e.target.value)}
+                    className={INPUT_CLASS}
+                  >
+                    <option value="club">Kulüp</option>
+                    <option value="community">Topluluk</option>
+                    <option value="event">Etkinlik</option>
+                    <option value="other">Diğer</option>
+                  </select>
+                </InputGroup>
+              </div>
+
+              <InputGroup label="Konum">
+                <input
+                  type="text"
+                  value={formData.location || ""}
+                  onChange={(e) => handleChange("location", e.target.value)}
+                  className={INPUT_CLASS}
+                  placeholder="Ör: Üniversite, İstanbul"
+                />
+              </InputGroup>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <InputGroup label="Başlangıç Tarihi">
+                  <input
+                    type="month"
+                    value={formData.startDate || ""}
+                    onChange={(e) => handleChange("startDate", e.target.value)}
+                    className={`${INPUT_CLASS} [color-scheme:dark]`}
+                  />
+                </InputGroup>
+                <InputGroup label="Bitiş Tarihi (boş = Devam Ediyor)">
+                  <input
+                    type="month"
+                    value={formData.endDate || ""}
+                    onChange={(e) => handleChange("endDate", e.target.value)}
+                    className={`${INPUT_CLASS} [color-scheme:dark]`}
+                  />
+                </InputGroup>
+              </div>
+
+              <InputGroup label="Açıklama">
+                <textarea
+                  value={formData.description || ""}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  className={`${INPUT_CLASS} min-h-[100px]`}
+                  placeholder="Bu gönüllü çalışmadaki aktiviteler ve katkılarınız..."
+                />
+              </InputGroup>
+
+              <InputGroup label="Etiketler (Enter ile ekle)">
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.techStack?.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="bg-gray-800 text-pink-400 px-2 py-1 rounded text-sm flex items-center gap-1 border border-gray-700"
+                    >
+                      {tag}{" "}
+                      <button onClick={() => removeTag(tag)}>
+                        <X className="w-3 h-3 hover:text-white" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="relative">
+                  <Tags className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    onKeyDown={handleTagInput}
+                    className={`${INPUT_CLASS} pl-10`}
+                    placeholder="Etiket ekle..."
                   />
                 </div>
               </InputGroup>

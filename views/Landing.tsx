@@ -118,7 +118,7 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
             <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-cyan-500/30 via-blue-500/20 to-indigo-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-[1px]" />
 
             {/* Card Body */}
-            <div className="relative rounded-2xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.06] group-hover:border-cyan-300 dark:group-hover:border-cyan-500/30 p-7 sm:p-9 transition-all duration-500 shadow-sm dark:shadow-none group-hover:shadow-xl dark:group-hover:shadow-none group-hover:bg-cyan-50/30 dark:group-hover:bg-white/[0.06]">
+            <div className="relative rounded-2xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.06] group-hover:border-cyan-300 dark:group-hover:border-cyan-500/30 p-7 sm:p-9 min-h-[380px] transition-all duration-500 shadow-sm dark:shadow-none group-hover:shadow-xl dark:group-hover:shadow-none group-hover:bg-cyan-50/30 dark:group-hover:bg-white/[0.06]">
               {/* Animated Gradient Accent */}
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -172,7 +172,7 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
             <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-purple-500/30 via-fuchsia-500/20 to-pink-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-[1px]" />
 
             {/* Card Body */}
-            <div className="relative rounded-2xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.06] group-hover:border-purple-300 dark:group-hover:border-purple-500/30 p-7 sm:p-9 transition-all duration-500 shadow-sm dark:shadow-none group-hover:shadow-xl dark:group-hover:shadow-none group-hover:bg-purple-50/30 dark:group-hover:bg-white/[0.06]">
+            <div className="relative rounded-2xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.06] group-hover:border-purple-300 dark:group-hover:border-purple-500/30 p-7 sm:p-9 min-h-[380px] transition-all duration-500 shadow-sm dark:shadow-none group-hover:shadow-xl dark:group-hover:shadow-none group-hover:bg-purple-50/30 dark:group-hover:bg-white/[0.06]">
               {/* Animated Gradient Accent */}
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 

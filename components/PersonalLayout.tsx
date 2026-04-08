@@ -21,6 +21,7 @@ import {
   Mic2,
   Eye,
   History,
+  Play,
 } from "lucide-react";
 
 /**
@@ -60,6 +61,7 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
     series: tmdbSeries,
     recentMovies: tmdbRecentMovies,
     recentSeries: tmdbRecentSeries,
+    currentlyWatching: tmdbCurrentlyWatching,
     isLoading: tmdbLoading,
     error: tmdbError,
   } = useTMDB();
@@ -571,27 +573,44 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                   <div className="h-px flex-1 bg-gray-200 dark:bg-white/[0.06]" />
                 </div>
 
-                <div className="space-y-3">
-                  {tmdbRecentSeries.map((series) => (
+                {/* Devam Edilen Dizi */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 flex items-center justify-center">
+                      <Play className="text-emerald-500 dark:text-emerald-400 w-3 h-3 fill-emerald-500 dark:fill-emerald-400" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.15em]">
+                      Devam Edilen Dizi
+                    </span>
+                    {tmdbCurrentlyWatching && (
+                      <span className="relative flex h-2 w-2 ml-1">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                    )}
+                  </div>
+                  {tmdbCurrentlyWatching ? (
                     <a
-                      key={series.id}
-                      href={series.tmdbUrl}
+                      href={tmdbCurrentlyWatching.tmdbUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex gap-4 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] p-3 hover:border-teal-300 dark:hover:border-teal-500/25 hover:bg-teal-50/30 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-[background-color,border-color,box-shadow] duration-300 cursor-pointer"
+                      className="group flex gap-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-200/60 dark:border-emerald-500/20 p-3 hover:border-emerald-400 dark:hover:border-emerald-500/40 hover:bg-emerald-100/50 dark:hover:bg-emerald-500/15 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-[background-color,border-color,box-shadow] duration-300 cursor-pointer"
                     >
                       <div className="relative w-14 h-20 shrink-0 overflow-hidden rounded-lg">
                         <img
                           loading="lazy"
                           decoding="async"
-                          src={series.image}
-                          alt={series.title}
+                          src={tmdbCurrentlyWatching.image}
+                          alt={tmdbCurrentlyWatching.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                         />
+                        <div className="absolute top-0 left-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-lg">
+                          <Play className="w-2 h-2 fill-white" />
+                        </div>
                       </div>
                       <div className="flex flex-col justify-center flex-1 min-w-0">
-                        <h3 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors truncate">
-                          {series.title}
+                        <h3 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors truncate">
+                          {tmdbCurrentlyWatching.title}
                         </h3>
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex gap-0.5">
@@ -600,22 +619,76 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                               .map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-3 h-3 ${i < Math.round(series.rating / 2) ? "text-teal-400 fill-teal-400" : "text-gray-300 dark:text-gray-700"}`}
+                                  className={`w-3 h-3 ${i < Math.round(tmdbCurrentlyWatching.rating / 2) ? "text-emerald-400 fill-emerald-400" : "text-gray-300 dark:text-gray-700"}`}
                                 />
                               ))}
                           </div>
                           <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
-                            {series.rating}/10
+                            {tmdbCurrentlyWatching.rating}/10
                           </span>
-                          {series.year && (
+                          {tmdbCurrentlyWatching.year && (
                             <span className="text-[10px] font-medium text-gray-300 dark:text-gray-600">
-                              · {series.year}
+                              · {tmdbCurrentlyWatching.year}
                             </span>
                           )}
                         </div>
                       </div>
                     </a>
-                  ))}
+                  ) : (
+                    <div className="flex items-center justify-center py-6 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06]">
+                      <p className="text-sm text-gray-400 dark:text-gray-500">
+                        Şu an izlediğim bir dizi yok
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {tmdbRecentSeries &&
+                    tmdbRecentSeries.map((series) => (
+                      <a
+                        key={series.id}
+                        href={series.tmdbUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex gap-4 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] p-3 hover:border-teal-300 dark:hover:border-teal-500/25 hover:bg-teal-50/30 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-[background-color,border-color,box-shadow] duration-300 cursor-pointer"
+                      >
+                        <div className="relative w-14 h-20 shrink-0 overflow-hidden rounded-lg">
+                          <img
+                            loading="lazy"
+                            decoding="async"
+                            src={series.image}
+                            alt={series.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                          />
+                        </div>
+                        <div className="flex flex-col justify-center flex-1 min-w-0">
+                          <h3 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors truncate">
+                            {series.title}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="flex gap-0.5">
+                              {Array(5)
+                                .fill(0)
+                                .map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-3 h-3 ${i < Math.round(series.rating / 2) ? "text-teal-400 fill-teal-400" : "text-gray-300 dark:text-gray-700"}`}
+                                  />
+                                ))}
+                            </div>
+                            <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                              {series.rating}/10
+                            </span>
+                            {series.year && (
+                              <span className="text-[10px] font-medium text-gray-300 dark:text-gray-600">
+                                · {series.year}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </a>
+                    ))}
                 </div>
               </div>
             </div>

@@ -59,7 +59,7 @@ export interface Project {
 
 export interface Skill {
   name: string;
-  level: number; // 0-100
+  level?: number; // Artık kullanılmıyor, geriye dönük uyumluluk için tutuldu
   icon?: React.ReactNode;
 }
 
@@ -75,6 +75,28 @@ export interface CareerItem {
   techStack?: string[];
 }
 
+export interface VolunteerItem {
+  id: string;
+  type: "club" | "community" | "event" | "other";
+  title: string;
+  organization: string;
+  location?: string;
+  startDate: string;
+  endDate?: string;
+  description: string;
+  techStack?: string[];
+}
+
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 export interface AppData {
   currentSong: Song;
   playlists: Playlist[];
@@ -86,4 +108,5 @@ export interface AppData {
   projects: Project[];
   skills: Skill[];
   career: CareerItem[];
+  volunteer: VolunteerItem[];
 }

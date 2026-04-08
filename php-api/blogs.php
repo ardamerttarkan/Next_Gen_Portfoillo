@@ -62,6 +62,11 @@ switch (method()) {
             jsonResponse(['error' => 'Title is required'], 400);
         }
 
+        // Güvenlik: İçerik boyutu kontrolü (max 500KB)
+        if (strlen($content) > 512000) {
+            jsonResponse(['error' => 'Content too large (max 500KB)'], 400);
+        }
+
         $stmt = $db->prepare('
             INSERT INTO blogs (id, title, excerpt, content, date, read_time, category, image, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

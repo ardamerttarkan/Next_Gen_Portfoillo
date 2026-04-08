@@ -44,3 +44,8 @@ export async function getRecentMovies(): Promise<TMDBMovie[]> {
 export async function getRecentSeries(): Promise<TMDBSeries[]> {
   return fetchTMDB<TMDBSeries[]>("/recent-series");
 }
+
+/** Şu an izlenen diziyi getir */
+export async function getCurrentlyWatching(): Promise<TMDBSeries | null> {
+  return fetchTMDB<TMDBSeries | null>("/currently-watching");
+}

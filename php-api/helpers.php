@@ -43,6 +43,25 @@ function jsonResponse(mixed $data, int $status = 200): void
 }
 
 /**
+ * Güvenli URL doğrulama
+ * Sadece http ve https şemalarına izin verir
+ */
+function validateUrl(string $url): bool
+{
+    if (empty($url)) {
+        return true; // Boş URL izin verilir
+    }
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return false;
+    }
+    $parsed = parse_url($url);
+    if (!isset($parsed['scheme']) || !in_array($parsed['scheme'], ['http', 'https'])) {
+        return false;
+    }
+    return true;
+}
+
+/**
  * Simple JWT-like token (HMAC based)
  */
 $jwtSecret = getenv('JWT_SECRET');

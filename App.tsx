@@ -146,6 +146,7 @@ const App: React.FC = () => {
     projects: mockData.projects,
     skills: mockData.skills,
     career: mockData.career,
+    volunteer: mockData.volunteer,
   });
 
   // Load data from API on mount
@@ -328,6 +329,7 @@ const App: React.FC = () => {
               skills={data.skills}
               blogs={data.techBlogs}
               career={data.career}
+              volunteer={data.volunteer}
               onBlogClick={(blog) => handleBlogClick(blog, "professional")}
               onViewAllBlogs={() => handleViewChange("professional-blog-list")}
             />

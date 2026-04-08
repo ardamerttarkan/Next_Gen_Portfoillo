@@ -51,6 +51,11 @@ switch (method()) {
             jsonResponse(['error' => 'Title is required'], 400);
         }
 
+        // Güvenlik: URL format kontrolü (sadece http/https)
+        if (!validateUrl($repoUrl) || !validateUrl($liveUrl)) {
+            jsonResponse(['error' => 'Invalid URL format. Only http/https allowed.'], 400);
+        }
+
         $stmt = $db->prepare('
             INSERT INTO projects (id, title, description, tech_stack, repo_url, live_url, image, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -74,6 +79,11 @@ switch (method()) {
         $liveUrl = trim($body['liveUrl'] ?? '');
         $image = $body['image'] ?? '';
         $status = $body['status'] ?? 'active';
+
+        // Güvenlik: URL format kontrolü (sadece http/https)
+        if (!validateUrl($repoUrl) || !validateUrl($liveUrl)) {
+            jsonResponse(['error' => 'Invalid URL format. Only http/https allowed.'], 400);
+        }
 
         $stmt = $db->prepare('
             INSERT INTO projects (id, title, description, tech_stack, repo_url, live_url, image, status)

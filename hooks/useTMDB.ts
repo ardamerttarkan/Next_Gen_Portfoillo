@@ -18,6 +18,9 @@ export function useTMDB(): TMDBData {
   const [series, setSeries] = useState<TMDBSeries[]>([]);
   const [recentMovies, setRecentMovies] = useState<TMDBMovie[]>([]);
   const [recentSeries, setRecentSeries] = useState<TMDBSeries[]>([]);
+  const [currentlyWatching, setCurrentlyWatching] = useState<TMDBSeries | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,11 +34,13 @@ export function useTMDB(): TMDBData {
         seriesResult,
         recentMoviesResult,
         recentSeriesResult,
+        currentlyWatchingResult,
       ] = await Promise.allSettled([
         tmdbService.getMovies(),
         tmdbService.getSeries(),
         tmdbService.getRecentMovies(),
         tmdbService.getRecentSeries(),
+        tmdbService.getCurrentlyWatching(),
       ]);
 
       if (moviesResult.status === "fulfilled") {
@@ -50,12 +55,16 @@ export function useTMDB(): TMDBData {
       if (recentSeriesResult.status === "fulfilled") {
         setRecentSeries(recentSeriesResult.value);
       }
+      if (currentlyWatchingResult.status === "fulfilled") {
+        setCurrentlyWatching(currentlyWatchingResult.value);
+      }
 
       const allFailed = [
         moviesResult,
         seriesResult,
         recentMoviesResult,
         recentSeriesResult,
+        currentlyWatchingResult,
       ].every((r) => r.status === "rejected");
 
       if (allFailed) {
@@ -74,5 +83,13 @@ export function useTMDB(): TMDBData {
     fetchAll();
   }, [fetchAll]);
 
-  return { movies, series, recentMovies, recentSeries, isLoading, error };
+  return {
+    movies,
+    series,
+    recentMovies,
+    recentSeries,
+    currentlyWatching,
+    isLoading,
+    error,
+  };
 }

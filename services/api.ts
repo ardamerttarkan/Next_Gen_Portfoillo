@@ -124,7 +124,7 @@ export async function updateAdminCredentials(data: {
 
 // ============ PROJECTS ============
 
-import { Project, BlogPost, Skill, CareerItem } from "../types";
+import { Project, BlogPost, Skill, CareerItem, VolunteerItem } from "../types";
 
 export async function getProjects(): Promise<Project[]> {
   return apiFetch<Project[]>("projects.php");
@@ -263,6 +263,61 @@ export async function deleteCareer(id: string): Promise<{ success: boolean }> {
   });
 }
 
+// ============ VOLUNTEER ============
+
+export async function getVolunteer(): Promise<VolunteerItem[]> {
+  return apiFetch<VolunteerItem[]>("volunteer.php");
+}
+
+export async function createVolunteer(
+  item: Omit<VolunteerItem, "id"> & { id?: string },
+): Promise<{ success: boolean; id: string }> {
+  return apiFetch("volunteer.php", {
+    method: "POST",
+    body: JSON.stringify(item),
+  });
+}
+
+export async function updateVolunteer(
+  id: string,
+  item: Partial<VolunteerItem>,
+): Promise<{ success: boolean }> {
+  return apiFetch(`volunteer.php?id=${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify(item),
+  });
+}
+
+export async function deleteVolunteer(id: string): Promise<{ success: boolean }> {
+  return apiFetch(`volunteer.php?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+// ============ CONTACT MESSAGES ============
+
+import { ContactMessage } from "../types";
+
+export async function getContactMessages(): Promise<ContactMessage[]> {
+  return apiFetch("contact.php", { method: "GET" });
+}
+
+export async function markMessageRead(id: number, isRead: boolean): Promise<{ success: boolean }> {
+  return apiFetch("contact.php", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, is_read: isRead }),
+  });
+}
+
+export async function deleteContactMessage(id: number): Promise<{ success: boolean }> {
+  return apiFetch("contact.php", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+}
+
 // ============ LOAD ALL DATA ============
 
 import { AppData } from "../types";
@@ -274,13 +329,14 @@ import * as mockData from "./mockData";
  */
 export async function loadAllData(): Promise<AppData> {
   try {
-    const [projects, techBlogs, hobbyBlogs, skills, career] = await Promise.all(
+    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] = await Promise.all(
       [
         getProjects(),
         getBlogs("tech"),
         getBlogs("hobby"),
         getSkills(),
         getCareer(),
+        getVolunteer(),
       ],
     );
 
@@ -291,6 +347,7 @@ export async function loadAllData(): Promise<AppData> {
       hobbyBlogs,
       skills,
       career,
+      volunteer,
       // Static / from other services (not in DB yet)
       currentSong: mockData.currentSong,
       playlists: mockData.playlists,
@@ -312,6 +369,7 @@ export async function loadAllData(): Promise<AppData> {
       projects: mockData.projects,
       skills: mockData.skills,
       career: mockData.career,
+      volunteer: mockData.volunteer,
     };
   }
 }
@@ -321,13 +379,14 @@ export async function loadAllData(): Promise<AppData> {
  */
 export async function loadAllDataAdmin(): Promise<AppData> {
   try {
-    const [projects, techBlogs, hobbyBlogs, skills, career] = await Promise.all(
+    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] = await Promise.all(
       [
         getAllProjects(),
         getAllBlogs("tech"),
         getAllBlogs("hobby"),
         getSkills(),
         getCareer(),
+        getVolunteer(),
       ],
     );
 
@@ -337,6 +396,7 @@ export async function loadAllDataAdmin(): Promise<AppData> {
       hobbyBlogs,
       skills,
       career,
+      volunteer,
       currentSong: mockData.currentSong,
       playlists: mockData.playlists,
       topTracks: mockData.topTracks,

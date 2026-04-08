@@ -53,12 +53,22 @@ const app = express();
  * CORS Ayarları
  * -------------
  * Production'da Nginx aynı origin üzerinden proxy yaptığı için
- * CORS genellikle gerekmez. Ama doğrudan API'ye erişim durumunda
- * (test, mobil vs.) sorun çıkmaması için tüm origin'lere izin veriyoruz.
+ * CORS genellikle gerekmez. Güvenlik için sadece izin verilen origin'lere izin veriyoruz.
  */
+const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000"];
+
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      // Aynı origin (undefined) veya izin verilen listede ise kabul et
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     methods: ["GET"],
   }),
 );
@@ -370,6 +380,8 @@ const TMDB_RECENT_MOVIES_LIST =
   process.env.TMDB_RECENT_MOVIES_LIST_ID || "8635030";
 const TMDB_RECENT_SERIES_LIST =
   process.env.TMDB_RECENT_SERIES_LIST_ID || "8635031";
+const TMDB_CURRENTLY_WATCHING_LIST =
+  process.env.TMDB_CURRENTLY_WATCHING_LIST_ID || "8635032";
 const TMDB_BASE = "https://api.themoviedb.org";
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
@@ -521,22 +533,54 @@ app.get("/api/tmdb/recent-series", async (_req, res) => {
 });
 
 /**
+ * GET /api/tmdb/currently-watching
+ * --------------------------------
+ * Şu an izlenen diziyi TMDB listesinden çeker.
+ * Liste sadece 1 dizi içermeli.
+ */
+app.get("/api/tmdb/currently-watching", async (_req, res) => {
+  try {
+    const data = await tmdbFetch(
+      `/4/list/${TMDB_CURRENTLY_WATCHING_LIST}?language=en-US&page=1`,
+    );
+
+    const results = data.results || [];
+    if (results.length === 0) {
+      return res.json(null);
+    }
+
+    // Sadece ilk diziyi al
+    const show = results[0];
+    const series = {
+      id: show.id,
+      title: show.name || show.original_name,
+      rating: Math.round(show.vote_average * 10) / 10,
+      image: show.poster_path ? `${TMDB_IMG}/w500${show.poster_path}` : "",
+      backdrop: show.backdrop_path
+        ? `${TMDB_IMG}/w780${show.backdrop_path}`
+        : "",
+      year: show.first_air_date ? show.first_air_date.split("-")[0] : "",
+      overview: show.overview || "",
+      tmdbUrl: `https://www.themoviedb.org/tv/${show.id}`,
+    };
+
+    res.json(series);
+  } catch (error: any) {
+    console.error("TMDB Currently Watching hatası:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * GET /api/health
  * ---------------
- * Sunucunun ayakta olup olmadığını ve .env'nin yüklenip yüklenmediğini kontrol eder.
- * Debug ve monitoring için kullanılır.
+ * Sunucunun ayakta olup olmadığını kontrol eder.
+ * Production için minimal bilgi döner.
  */
 app.get("/api/health", (_req, res) => {
   res.json({
     status: "ok",
-    port: PORT,
-    envPath,
-    envLoaded: {
-      SPOTIFY_CLIENT_ID: !!CLIENT_ID,
-      SPOTIFY_CLIENT_SECRET: !!CLIENT_SECRET,
-      SPOTIFY_REFRESH_TOKEN: !!REFRESH_TOKEN,
-      TMDB_API_TOKEN: !!process.env.TMDB_API_TOKEN,
-    },
+    timestamp: new Date().toISOString(),
   });
 });
 

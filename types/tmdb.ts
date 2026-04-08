@@ -36,6 +36,7 @@ export interface TMDBData {
   series: TMDBSeries[];
   recentMovies: TMDBMovie[];
   recentSeries: TMDBSeries[];
+  currentlyWatching: TMDBSeries | null;
   isLoading: boolean;
   error: string | null;
 }
