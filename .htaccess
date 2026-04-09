@@ -12,8 +12,8 @@ Options -Indexes
     Require all denied
 </FilesMatch>
 
-# TypeScript / JSX kaynak dosyaları
-<FilesMatch "\.(tsx?|jsx?)$">
+# TypeScript / JSX kaynak dosyaları (build JS dosyalarını engelleme!)
+<FilesMatch "\.(ts|tsx|jsx)$">
     Require all denied
 </FilesMatch>
 
@@ -40,16 +40,21 @@ Options -Indexes
   # ───── 4. dist/ içindeki statik dosyalara (JS/CSS/img) izin ver ─
   RewriteRule ^dist/ - [L]
 
+  # Build çıktısı /dist/assets altında; canlı URL'leri /assets/... olduğunda
+  # dosyaları içten /dist/assets/... yoluna eşle.
+  RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
+
   # ───── 5. Gerçek dosyalar (index.html, img/, favicon vb.) ───────
   # İzin verilen statik kaynaklar
   RewriteRule ^img/ - [L]
-  RewriteCond %{REQUEST_FILENAME} -f
-  RewriteRule \.(html|png|jpg|jpeg|gif|svg|ico|webp|woff2?|ttf|eot|css)$ - [L]
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
 
   # ───── 6. SPA Fallback — Geri kalan her şeyi index.html'e yönlendir
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^ index.html [L]
+  RewriteRule ^ dist/index.html [L]
 </IfModule>
 
 # ───── 7. Güvenlik başlıkları ─────────────────────────────────────

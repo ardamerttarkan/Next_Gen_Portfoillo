@@ -44,17 +44,23 @@ interface AdminPanelProps {
   onGoHome?: () => void;
 }
 
-type Tab =
-  | "dashboard"
+type DataTab =
   | "projects"
   | "techBlogs"
   | "hobbyBlogs"
   | "skills"
   | "career"
-  | "volunteer"
-  | "messages"
-  | "settings";
-type EditingItem = Project | BlogPost | Skill | CareerItem | VolunteerItem | null;
+  | "volunteer";
+
+type Tab = "dashboard" | DataTab | "messages" | "settings";
+
+type EditingItem =
+  | Project
+  | BlogPost
+  | Skill
+  | CareerItem
+  | VolunteerItem
+  | null;
 
 // Standard Input Style
 const INPUT_CLASS =
@@ -71,13 +77,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   
   // Contact messages state
-  const [messages, setMessages] = useState<api.ContactMessage[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
 
   // Editor State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EditingItem>(null);
-  const [editType, setEditType] = useState<Tab | null>(null);
+  const [editType, setEditType] = useState<DataTab | null>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -100,11 +107,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   
   const loadMessages = async () => {
     setMessagesLoading(true);
+    setMessagesError(null);
     try {
       const data = await api.getContactMessages();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Mesaj verisi beklenmeyen formatta döndü");
+      }
+
       setMessages(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load messages:", err);
+      setMessages([]);
+      setMessagesError(err?.message || "Mesajlar yüklenemedi");
     } finally {
       setMessagesLoading(false);
     }
@@ -158,13 +173,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
-  const handleEdit = (item: any, type: Tab) => {
+  const handleEdit = (item: any, type: DataTab) => {
     setEditingItem(item);
     setEditType(type);
     setIsModalOpen(true);
   };
 
-  const handleAddNew = (type: Tab) => {
+  const handleAddNew = (type: DataTab) => {
     setEditingItem(null);
     setEditType(type);
     setIsModalOpen(true);
@@ -173,7 +188,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleSave = async (formData: any) => {
     if (!editType) return;
 
-    const key = editType as keyof AppData;
+    const key = editType;
     const currentList = data[key] as any[];
 
     try {
@@ -485,10 +500,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         >
                           <td className="px-4 sm:px-6 py-4 font-medium text-white">
                             <div className="flex items-center gap-3">
-                              <img
-                                src={p.image}
-                                className="w-8 h-8 rounded object-cover shrink-0 hidden sm:block"
-                              />
+                              {p.image ? (
+                                <img
+                                  src={p.image}
+                                  alt={p.title}
+                                  className="w-8 h-8 rounded object-cover shrink-0 hidden sm:block"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded bg-gray-800 border border-gray-700 shrink-0 hidden sm:flex items-center justify-center">
+                                  <ImageIcon className="w-4 h-4 text-gray-500" />
+                                </div>
+                              )}
                               <span className="truncate">{p.title}</span>
                             </div>
                           </td>
@@ -514,7 +536,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {activeTab !== "dashboard" && activeTab !== "settings" && activeTab !== "messages" && (
+          {activeTab !== "dashboard" && activeTab !== "settings" && (
             <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
@@ -525,12 +547,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     Manage your {activeTab} content.
                   </p>
                 </div>
-                <button
-                  onClick={() => handleAddNew(activeTab)}
-                  className="bg-prof-blue hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-blue-500/20 transition-all font-medium"
-                >
-                  <Plus className="w-4 h-4" /> Add New
-                </button>
+                {activeTab !== "messages" && (
+                  <button
+                    onClick={() => handleAddNew(activeTab)}
+                    className="bg-prof-blue hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-blue-500/20 transition-all font-medium"
+                  >
+                    <Plus className="w-4 h-4" /> Add New
+                  </button>
+                )}
               </div>
 
               <div className="grid gap-4">
@@ -737,6 +761,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   )
                 ) : activeTab === "messages" ? (
                   <div className="space-y-4">
+                    {messagesError && (
+                      <div className="bg-red-500/10 border border-red-500/30 text-red-200 rounded-xl p-4 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <AlertCircle className="w-5 h-5 mt-0.5 shrink-0 text-red-300" />
+                          <div className="min-w-0">
+                            <div className="font-semibold">Mesajlar yüklenemedi</div>
+                            <div className="text-sm text-red-200/80 break-words">
+                              {messagesError}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={loadMessages}
+                          className="px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-100 text-sm font-medium transition-colors"
+                        >
+                          Tekrar Dene
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>
+                        {messagesLoading
+                          ? "Mesajlar yükleniyor..."
+                          : `Toplam mesaj: ${messages.length}`}
+                      </span>
+                      <button
+                        onClick={loadMessages}
+                        disabled={messagesLoading}
+                        className="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-200 font-medium transition-colors"
+                      >
+                        Yenile
+                      </button>
+                    </div>
+
                     {messagesLoading ? (
                       <div className="flex justify-center py-12">
                         <div className="w-8 h-8 border-2 border-gray-600 border-t-cyan-500 rounded-full animate-spin" />
@@ -746,8 +805,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     ) : (
                       messages.map((msg) => (
                         <div
-                          key={msg.id}
-                          className={`bg-gray-900 p-4 sm:p-5 rounded-xl border ${msg.is_read ? 'border-gray-800' : 'border-cyan-500/50 bg-gray-900/80'} flex flex-col gap-3 group hover:border-gray-700 transition-all`}
+                          key={`${msg.id}-${msg.created_at}`}
+                          className={`bg-gray-900 p-4 sm:p-5 rounded-xl border ${msg.is_read ? "border-gray-800" : "border-cyan-500/50 bg-gray-900/80"} flex flex-col gap-3 group hover:border-gray-700 transition-all`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
@@ -755,19 +814,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 {!msg.is_read && (
                                   <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
                                 )}
-                                <h4 className="font-semibold text-white">{msg.name}</h4>
-                                <span className="text-gray-500 text-sm">({msg.email})</span>
+                                <h4 className="font-semibold text-white">{msg.name || "—"}</h4>
+                                <span className="text-gray-500 text-sm">({msg.email || "—"})</span>
                               </div>
-                              <p className="text-cyan-400 text-sm font-medium mb-2">{msg.subject}</p>
-                              <p className="text-gray-300 text-sm whitespace-pre-wrap">{msg.message}</p>
+                              <p className="text-cyan-400 text-sm font-medium mb-2">
+                                {msg.subject || "Konu belirtilmedi"}
+                              </p>
+                              <p className="text-gray-300 text-sm whitespace-pre-wrap">{msg.message || ""}</p>
                               <p className="text-gray-600 text-xs mt-2">
-                                {new Date(msg.created_at).toLocaleString('tr-TR')}
+                                {msg.created_at
+                                  ? new Date(msg.created_at).toLocaleString("tr-TR")
+                                  : ""}
                               </p>
                             </div>
                             <div className="flex flex-col gap-2">
                               <button
                                 onClick={() => handleMarkRead(msg.id, !msg.is_read)}
-                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${msg.is_read ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30'}`}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${msg.is_read ? "bg-gray-800 text-gray-400 hover:bg-gray-700" : "bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30"}`}
                                 title={msg.is_read ? "Okunmadı olarak işaretle" : "Okundu olarak işaretle"}
                               >
                                 {msg.is_read ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -804,7 +867,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className="bg-gray-900 p-4 sm:p-5 rounded-xl border border-gray-800 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center group hover:border-gray-700 transition-all"
                       >
                         <div className="w-full sm:w-24 md:w-32 h-40 sm:h-20 md:h-20 bg-gray-800 rounded-lg overflow-hidden shrink-0">
-                          {item.image ? (
+                          {typeof item.image === "string" && item.image.trim() ? (
                             <img
                               src={item.image}
                               alt={item.title}
@@ -1337,10 +1400,11 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
                   )}
 
                   {/* Preview */}
-                  {formData.image && (
+                  {typeof formData.image === "string" && formData.image.trim() && (
                     <div className="relative rounded-xl overflow-hidden border border-gray-700 bg-gray-950">
                       <img
                         src={formData.image}
+                        alt="Preview"
                         className="w-full max-h-48 object-contain"
                       />
                       <button

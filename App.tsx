@@ -252,8 +252,8 @@ const App: React.FC = () => {
     <div
       className={`transition-opacity duration-300 ${transitioning ? "opacity-0" : "opacity-100"}`}
     >
-      {/* Theme Toggle available everywhere except admin */}
-      {view !== "admin" && (
+      {/* Theme Toggle available everywhere except admin (professional view uses its own navbar toggle) */}
+      {view !== "admin" && view !== "professional" && (
         <ThemeToggle
           isDark={darkMode}
           toggle={() => setDarkMode(!darkMode)}
@@ -332,6 +332,8 @@ const App: React.FC = () => {
               volunteer={data.volunteer}
               onBlogClick={(blog) => handleBlogClick(blog, "professional")}
               onViewAllBlogs={() => handleViewChange("professional-blog-list")}
+              isDark={darkMode}
+              onToggleTheme={() => setDarkMode(!darkMode)}
             />
             <BackButton onClick={() => handleViewChange("landing")} />
           </Suspense>

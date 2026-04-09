@@ -9,7 +9,7 @@ require_once __DIR__ . '/config.php';
 $allowedOrigin = getenv('CORS_ORIGIN') ?: 'http://localhost:3000';
 header('Content-Type: application/json; charset=utf-8');
 header("Access-Control-Allow-Origin: $allowedOrigin");
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');

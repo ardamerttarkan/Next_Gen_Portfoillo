@@ -21,6 +21,10 @@ import {
   Calendar,
   Heart,
   Mail,
+  Moon,
+  Sun,
+  Menu,
+  X,
 } from "lucide-react";
 import ContactForm from "./ContactForm";
 
@@ -32,6 +36,8 @@ interface ProfessionalLayoutProps {
   volunteer: VolunteerItem[];
   onBlogClick: (blog: BlogPost) => void;
   onViewAllBlogs: () => void;
+  isDark: boolean;
+  onToggleTheme: () => void;
 }
 
 export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
@@ -42,9 +48,28 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
   volunteer,
   onBlogClick,
   onViewAllBlogs,
+  isDark,
+  onToggleTheme,
 }) => {
   const [showContactForm, setShowContactForm] = useState(false);
-  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const CV_URL = `${import.meta.env.BASE_URL}img/ArdaMertTarkan_CV.pdf`;
+
+  const navItems: { label: string; id: string | null; action?: () => void }[] =
+    [
+      { label: "Hakkımda", id: "about" },
+      { label: "Yetenekler", id: "skills" },
+      { label: "Kariyer", id: "career" },
+      { label: "Projeler", id: "projects" },
+      { label: "Blog", id: null, action: onViewAllBlogs },
+      {
+        label: "İletişim",
+        id: null,
+        action: () => setShowContactForm(true),
+      },
+    ];
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -87,45 +112,140 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
 
       {/* ===== Sticky Navbar ===== */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#06060e]/70 backdrop-blur-xl border-b border-gray-200/60 dark:border-white/[0.06]">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div
-            className="flex items-center gap-2.5 cursor-pointer"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-cyan-500/20">
-              AMT
+        <div className="max-w-6xl mx-auto px-6 py-4 relative">
+          <div className="flex justify-between items-center">
+            <div
+              className="flex items-center gap-2.5 cursor-pointer"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            >
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-cyan-500/20">
+                AMT
+              </div>
+              <span className="font-display font-bold text-lg tracking-tight text-gray-900 dark:text-white">
+                Arda Mert Tarkan
+              </span>
             </div>
-            <span className="font-display font-bold text-lg tracking-tight text-gray-900 dark:text-white">
-              Arda Mert Tarkan
-            </span>
-          </div>
-          <nav className="hidden md:flex gap-1 text-sm font-medium text-gray-500">
-            {[
-              { label: "Hakkımda", id: "about" },
-              { label: "Yetenekler", id: "skills" },
-              { label: "Kariyer", id: "career" },
-              { label: "Projeler", id: "projects" },
-              { label: "Blog", id: null, action: onViewAllBlogs },
-              { label: "İletişim", id: null, action: () => setShowContactForm(true) },
-            ].map((item) => (
+
+            <nav className="hidden md:flex gap-1 text-sm font-medium text-gray-500">
+              {navItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() =>
+                    item.id ? scrollToSection(item.id) : item.action?.()
+                  }
+                  className="px-3.5 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white transition-all duration-200"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+
+            {/* Desktop actions */}
+            <div className="hidden md:flex items-center gap-3">
               <button
-                key={item.label}
-                onClick={() =>
-                  item.id ? scrollToSection(item.id) : item.action?.()
-                }
-                className="px-3.5 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white transition-all duration-200"
+                onClick={onToggleTheme}
+                className="p-2 rounded-lg bg-white/70 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+                title={isDark ? "Aydınlık Moda Geç" : "Karanlık Moda Geç"}
               >
-                {item.label}
+                {isDark ? (
+                  <Sun className="w-5 h-5 text-amber-400" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
               </button>
-            ))}
-          </nav>
-          <a
-            href="#"
-            className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:-translate-y-0.5"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">CV İndir</span>
-          </a>
+
+              <a
+                href={CV_URL}
+                download="ArdaMertTarkan_CV.pdf"
+                className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">CV İndir</span>
+              </a>
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              className="md:hidden w-10 h-10 inline-flex items-center justify-center rounded-xl bg-white/70 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+              aria-label={mobileMenuOpen ? "Menüyü Kapat" : "Menüyü Aç"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+
+          {/* Mobile popup menu */}
+          {mobileMenuOpen && (
+            <>
+              <button
+                className="md:hidden fixed inset-0 z-40 bg-black/20"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Menüyü Kapat"
+              />
+              <div className="md:hidden absolute left-6 right-6 top-full mt-3 z-50 rounded-2xl bg-white/95 dark:bg-[#06060e]/95 backdrop-blur-xl border border-gray-200/60 dark:border-white/[0.10] shadow-xl overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.15em]">
+                      Menü
+                    </span>
+                    <button
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] text-gray-600 dark:text-gray-300"
+                      aria-label="Menüyü Kapat"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-1">
+                    {navItems.map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          if (item.id) scrollToSection(item.id);
+                          else item.action?.();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-200/60 dark:border-white/[0.08] flex gap-2">
+                    <button
+                      onClick={onToggleTheme}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.08] text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+                      title={isDark ? "Aydınlık Moda Geç" : "Karanlık Moda Geç"}
+                    >
+                      {isDark ? (
+                        <Sun className="w-4 h-4 text-amber-400" />
+                      ) : (
+                        <Moon className="w-4 h-4" />
+                      )}
+                      <span>{isDark ? "Aydınlık" : "Karanlık"}</span>
+                    </button>
+
+                    <a
+                      href={CV_URL}
+                      download="ArdaMertTarkan_CV.pdf"
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
+                      title="CV İndir"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>CV</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
@@ -255,17 +375,22 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
             </div>
 
             <div className="space-y-4">
-              {skills.map((skill) => (
-                <div
-                  key={skill.name}
-                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-cyan-300 dark:hover:border-cyan-500/30 hover:bg-cyan-50/30 dark:hover:bg-white/[0.05] transition-all duration-300"
-                >
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                    {skill.name}
-                  </span>
-                </div>
-              ))}
+              <h3 className="text-lg font-semibold text-gray-300 mb-4">
+                Tüm Yetenekler
+              </h3>
+              <div className="flex flex-col gap-3">
+                {skills.map((skill) => (
+                  <div
+                    key={skill.name}
+                    className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-cyan-300 dark:hover:border-cyan-500/30 hover:bg-cyan-50/30 dark:hover:bg-white/[0.05] transition-all duration-300"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shrink-0" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
+                      {skill.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -645,7 +770,9 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                                       <span className="flex items-center gap-1">
                                         <Calendar className="w-3.5 h-3.5" />
                                         {formatDate(item.startDate)} —{" "}
-                                        {formatDate(item.endDate)}
+                                        {item.endDate
+                                          ? formatDate(item.endDate)
+                                          : "Devam Ediyor"}
                                       </span>
                                     </div>
                                   </div>
@@ -656,18 +783,19 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
                                     </p>
                                   )}
 
-                                  {item.techStack && item.techStack.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5 mt-3">
-                                      {item.techStack.map((tag) => (
-                                        <span
-                                          key={tag}
-                                          className="px-2 py-0.5 bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400 text-[11px] rounded-full border border-gray-200/60 dark:border-white/[0.06]"
-                                        >
-                                          {tag}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
+                                  {item.techStack &&
+                                    item.techStack.length > 0 && (
+                                      <div className="flex flex-wrap gap-1.5 mt-3">
+                                        {item.techStack.map((tag) => (
+                                          <span
+                                            key={tag}
+                                            className="px-2 py-0.5 bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400 text-[11px] rounded-full border border-gray-200/60 dark:border-white/[0.06]"
+                                          >
+                                            {tag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
 
                                   {!item.endDate && (
                                     <div className="mt-3 flex items-center gap-1.5">
@@ -859,10 +987,9 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
       </main>
 
       {/* ===== Contact Form Modal ===== */}
-      <ContactForm 
-        isOpen={showContactForm} 
+      <ContactForm
+        isOpen={showContactForm}
         onClose={() => setShowContactForm(false)}
-        calendlyUrl="https://calendly.com/ardamert60" // Calendly URL'nizi buraya ekleyin
       />
 
       {/* ===== Floating Contact Button ===== */}

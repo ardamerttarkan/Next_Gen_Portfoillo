@@ -132,7 +132,7 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({ nowPlaying }) => {
                 className="relative shrink-0"
               >
                 <img
-                  src={nowPlaying!.albumArt}
+                  src={nowPlaying!.albumArt || undefined}
                   alt={nowPlaying!.title}
                   className="w-16 h-16 rounded-xl shadow-lg object-cover border border-gray-200/40 dark:border-white/[0.08]"
                 />

@@ -3,7 +3,29 @@
  * Communicates with PHP backend via REST API
  */
 
-const API_BASE = "/php-api";
+import type {
+  AppData,
+  BlogPost,
+  CareerItem,
+  ContactMessage,
+  Project,
+  Skill,
+  VolunteerItem,
+} from "../types";
+import * as mockData from "./mockData";
+
+const APP_SUBDIR = "/Next_Gen_Portfoillo";
+const basePrefix =
+  typeof window !== "undefined" &&
+  window.location.pathname.startsWith(APP_SUBDIR)
+    ? APP_SUBDIR
+    : "";
+
+const API_BASE = `${basePrefix}/php-api`;
+
+export function getApiBase(): string {
+  return API_BASE;
+}
 
 // Token management
 let authToken: string | null = localStorage.getItem("admin_token");
@@ -57,15 +79,40 @@ async function apiFetch<T>(
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const res = await fetch(`${API_BASE}/${endpoint}`, {
+  const url = `${API_BASE}/${endpoint}`;
+  const res = await fetch(url, {
     ...options,
     headers,
   });
 
-  const data = await res.json();
+  const contentType = res.headers.get("content-type") || "";
+  const text = await res.text();
+
+  let data: any = null;
+  if (text) {
+    const looksLikeJson = /^[\s\r\n]*[\[{]/.test(text);
+    if (contentType.includes("application/json") || looksLikeJson) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { raw: text };
+      }
+    } else {
+      data = { raw: text };
+    }
+  }
 
   if (!res.ok) {
-    throw new Error(data.error || `API error: ${res.status}`);
+    const message =
+      data && typeof data === "object" && typeof data.error === "string"
+        ? data.error
+        : `API error: ${res.status}`;
+
+    const err: any = new Error(message);
+    err.status = res.status;
+    err.endpoint = endpoint;
+    err.data = data;
+    throw err;
   }
 
   return data as T;
@@ -123,8 +170,6 @@ export async function updateAdminCredentials(data: {
 }
 
 // ============ PROJECTS ============
-
-import { Project, BlogPost, Skill, CareerItem, VolunteerItem } from "../types";
 
 export async function getProjects(): Promise<Project[]> {
   return apiFetch<Project[]>("projects.php");
@@ -288,7 +333,9 @@ export async function updateVolunteer(
   });
 }
 
-export async function deleteVolunteer(id: string): Promise<{ success: boolean }> {
+export async function deleteVolunteer(
+  id: string,
+): Promise<{ success: boolean }> {
   return apiFetch(`volunteer.php?id=${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
@@ -296,13 +343,18 @@ export async function deleteVolunteer(id: string): Promise<{ success: boolean }>
 
 // ============ CONTACT MESSAGES ============
 
-import { ContactMessage } from "../types";
-
 export async function getContactMessages(): Promise<ContactMessage[]> {
-  return apiFetch("contact.php", { method: "GET" });
+  const data = await apiFetch<unknown>("contact.php", { method: "GET" });
+  if (!Array.isArray(data)) {
+    throw new Error("Mesaj verisi beklenmeyen formatta döndü");
+  }
+  return data as ContactMessage[];
 }
 
-export async function markMessageRead(id: number, isRead: boolean): Promise<{ success: boolean }> {
+export async function markMessageRead(
+  id: number,
+  isRead: boolean,
+): Promise<{ success: boolean }> {
   return apiFetch("contact.php", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -310,7 +362,9 @@ export async function markMessageRead(id: number, isRead: boolean): Promise<{ su
   });
 }
 
-export async function deleteContactMessage(id: number): Promise<{ success: boolean }> {
+export async function deleteContactMessage(
+  id: number,
+): Promise<{ success: boolean }> {
   return apiFetch("contact.php", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
@@ -320,25 +374,21 @@ export async function deleteContactMessage(id: number): Promise<{ success: boole
 
 // ============ LOAD ALL DATA ============
 
-import { AppData } from "../types";
-import * as mockData from "./mockData";
-
 /**
  * Load all portfolio data from API.
  * Falls back to mock data for fields not stored in DB (songs, movies, etc.)
  */
 export async function loadAllData(): Promise<AppData> {
   try {
-    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] = await Promise.all(
-      [
+    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] =
+      await Promise.all([
         getProjects(),
         getBlogs("tech"),
         getBlogs("hobby"),
         getSkills(),
         getCareer(),
         getVolunteer(),
-      ],
-    );
+      ]);
 
     return {
       // From API (no mockData fallback so CRUD operations persist)
@@ -379,16 +429,15 @@ export async function loadAllData(): Promise<AppData> {
  */
 export async function loadAllDataAdmin(): Promise<AppData> {
   try {
-    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] = await Promise.all(
-      [
+    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] =
+      await Promise.all([
         getAllProjects(),
         getAllBlogs("tech"),
         getAllBlogs("hobby"),
         getSkills(),
         getCareer(),
         getVolunteer(),
-      ],
-    );
+      ]);
 
     return {
       projects,
