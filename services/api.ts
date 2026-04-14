@@ -9,7 +9,6 @@ import type {
   CareerItem,
   ContactMessage,
   Project,
-  Skill,
   VolunteerItem,
 } from "../types";
 import * as mockData from "./mockData";
@@ -245,38 +244,6 @@ export async function deleteBlog(id: string): Promise<{ success: boolean }> {
   });
 }
 
-// ============ SKILLS ============
-
-export async function getSkills(): Promise<Skill[]> {
-  return apiFetch<Skill[]>("skills.php");
-}
-
-export async function createSkill(skill: {
-  name: string;
-  level: number;
-}): Promise<{ success: boolean }> {
-  return apiFetch("skills.php", {
-    method: "POST",
-    body: JSON.stringify(skill),
-  });
-}
-
-export async function updateSkill(
-  name: string,
-  skill: { name: string; level: number },
-): Promise<{ success: boolean }> {
-  return apiFetch(`skills.php?name=${encodeURIComponent(name)}`, {
-    method: "PUT",
-    body: JSON.stringify(skill),
-  });
-}
-
-export async function deleteSkill(name: string): Promise<{ success: boolean }> {
-  return apiFetch(`skills.php?name=${encodeURIComponent(name)}`, {
-    method: "DELETE",
-  });
-}
-
 // ============ CAREER ============
 
 export async function getCareer(): Promise<CareerItem[]> {
@@ -380,12 +347,11 @@ export async function deleteContactMessage(
  */
 export async function loadAllData(): Promise<AppData> {
   try {
-    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] =
+    const [projects, techBlogs, hobbyBlogs, career, volunteer] =
       await Promise.all([
         getProjects(),
         getBlogs("tech"),
         getBlogs("hobby"),
-        getSkills(),
         getCareer(),
         getVolunteer(),
       ]);
@@ -395,7 +361,6 @@ export async function loadAllData(): Promise<AppData> {
       projects,
       techBlogs,
       hobbyBlogs,
-      skills,
       career,
       volunteer,
       // Static / from other services (not in DB yet)
@@ -417,7 +382,6 @@ export async function loadAllData(): Promise<AppData> {
       hobbyBlogs: mockData.hobbyBlogs,
       techBlogs: mockData.techBlogs,
       projects: mockData.projects,
-      skills: mockData.skills,
       career: mockData.career,
       volunteer: mockData.volunteer,
     };
@@ -429,12 +393,11 @@ export async function loadAllData(): Promise<AppData> {
  */
 export async function loadAllDataAdmin(): Promise<AppData> {
   try {
-    const [projects, techBlogs, hobbyBlogs, skills, career, volunteer] =
+    const [projects, techBlogs, hobbyBlogs, career, volunteer] =
       await Promise.all([
         getAllProjects(),
         getAllBlogs("tech"),
         getAllBlogs("hobby"),
-        getSkills(),
         getCareer(),
         getVolunteer(),
       ]);
@@ -443,7 +406,6 @@ export async function loadAllDataAdmin(): Promise<AppData> {
       projects,
       techBlogs,
       hobbyBlogs,
-      skills,
       career,
       volunteer,
       currentSong: mockData.currentSong,

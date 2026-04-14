@@ -1,19 +1,18 @@
 import React, { useState } from "react";
-import { Project, Skill, BlogPost, CareerItem, VolunteerItem } from "../types";
+import { Project, BlogPost, CareerItem, VolunteerItem } from "../types";
 import {
   Github,
   Linkedin,
   ExternalLink,
-  Code2,
-  Terminal,
   ArrowRight,
   Download,
   Sparkles,
-  Layers,
   FileText,
-  Cpu,
-  Database,
   Globe,
+  Code2,
+  Terminal,
+  Database,
+  Layers,
   Briefcase,
   GraduationCap,
   Laptop,
@@ -21,6 +20,7 @@ import {
   Calendar,
   Heart,
   Mail,
+  Cpu,
   Moon,
   Sun,
   Menu,
@@ -30,7 +30,6 @@ import ContactForm from "./ContactForm";
 
 interface ProfessionalLayoutProps {
   projects: Project[];
-  skills: Skill[];
   blogs: BlogPost[];
   career: CareerItem[];
   volunteer: VolunteerItem[];
@@ -42,7 +41,6 @@ interface ProfessionalLayoutProps {
 
 export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
   projects,
-  skills,
   blogs,
   career,
   volunteer,
@@ -59,7 +57,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
   const navItems: { label: string; id: string | null; action?: () => void }[] =
     [
       { label: "Hakkımda", id: "about" },
-      { label: "Yetenekler", id: "skills" },
+      { label: "Teknik Beceriler", id: "skills" },
       { label: "Kariyer", id: "career" },
       { label: "Projeler", id: "projects" },
       { label: "Blog", id: null, action: onViewAllBlogs },
@@ -304,93 +302,69 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
           </div>
         </section>
 
-        {/* ===== Skills Section ===== */}
         <section id="skills">
           <div className="flex items-center gap-4 mb-12">
             <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200/60 dark:border-blue-500/20 flex items-center justify-center">
               <Layers className="text-blue-500 dark:text-blue-400 w-5 h-5" />
             </div>
             <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-              Teknik Yetenekler
+              Teknik Beceriler
             </h2>
             <div className="h-px flex-1 bg-gray-200 dark:bg-white/[0.06]" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-                Oyun motorlarından, web frameworklerine, veritabanlarından bulut
-                servislerine kadar geniş bir yelpazede deneyim sahibiyim. İşte
-                bazı favori araçlarım ve teknolojilerim:
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  {
-                    icon: (
-                      <Code2 className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
-                    ),
-                    title: "Frontend & Mobil",
-                    desc: "Vue, React, HTML/CSS, Flutter",
-                    color: "cyan",
-                  },
-                  {
-                    icon: (
-                      <Terminal className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-                    ),
-                    title: "Backend",
-                    desc: "PHP, Node.js, MySQL, MongoDB",
-                    color: "emerald",
-                  },
-                  {
-                    icon: (
-                      <Database className="w-5 h-5 text-purple-500 dark:text-purple-400" />
-                    ),
-                    title: "Sistem ve Yazılım Geliştirme",
-                    desc: "C#, C++, Python, Unreal Engine, Unity",
-                    color: "purple",
-                  },
-                  {
-                    icon: (
-                      <Globe className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                    ),
-                    title: "DevOps",
-                    desc: "Docker, Linux (Debian), Azure, CI/CD",
-                    color: "amber",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="group p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-gray-300 dark:hover:border-white/[0.12] hover:bg-gray-50 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-[background-color,border-color,box-shadow] duration-300"
-                  >
-                    <div className="mb-3">{item.icon}</div>
-                    <h3 className="font-bold text-gray-900 dark:text-white text-sm">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                      {item.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="space-y-6">
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed max-w-3xl">
+              Web geliştirme, backend sistemleri, veritabanı yönetimi ve Linux
+              tabanlı araçlarla çalışıyorum. Aşağıda en sık kullandığım
+              teknoloji alanları yer alıyor.
+            </p>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-300 mb-4">
-                Tüm Yetenekler
-              </h3>
-              <div className="flex flex-col gap-3">
-                {skills.map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-cyan-300 dark:hover:border-cyan-500/30 hover:bg-cyan-50/30 dark:hover:bg-white/[0.05] transition-all duration-300"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shrink-0" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
-                      {skill.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {[
+                {
+                  icon: (
+                    <Code2 className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
+                  ),
+                  title: "Web Geliştirme",
+                  desc: "HTML, CSS, TailwindCSS, Bootstrap, JavaScript, TypeScript, React, Vue, PHP, Postman",
+                },
+
+                {
+                  icon: (
+                    <Database className="w-5 h-5 text-purple-500 dark:text-purple-400" />
+                  ),
+                  title: "Veritabanı",
+                  desc: "MySQL, PostgreSQL, Firebase, SQLite",
+                },
+                {
+                  icon: (
+                    <Cpu className="w-5 h-5 text-rose-500 dark:text-rose-400" />
+                  ),
+                  title: "Programlama Dilleri",
+                  desc: "C, C++, C#, Python",
+                },
+                {
+                  icon: (
+                    <Globe className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                  ),
+                  title: "Sistem & DevOps",
+                  desc: "Linux (Debian), Nginx, pm2, Git, Docker, Azure, AWS, CI/CD",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="group p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] hover:border-gray-300 dark:hover:border-white/[0.12] hover:bg-gray-50 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-[background-color,border-color,box-shadow] duration-300"
+                >
+                  <div className="mb-3">{item.icon}</div>
+                  <h3 className="font-bold text-gray-900 dark:text-white text-sm">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -995,7 +969,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
       {/* ===== Floating Contact Button ===== */}
       <button
         onClick={() => setShowContactForm(true)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full shadow-lg shadow-cyan-500/25 flex items-center justify-center hover:scale-110 hover:shadow-xl hover:shadow-cyan-500/30 transition-all duration-300"
+        className="fixed bottom-6 right-6 z-40 p-3 rounded-full shadow-xl transition-all duration-300 hover:scale-110 bg-white border border-gray-200 text-gray-700 hover:text-purple-600 hover:border-purple-200 dark:bg-white/[0.06] dark:backdrop-blur-xl dark:border-white/[0.1] dark:text-white dark:hover:text-cyan-400 dark:hover:border-cyan-500/30 dark:shadow-none"
         title="İletişim"
       >
         <Mail className="w-6 h-6" />

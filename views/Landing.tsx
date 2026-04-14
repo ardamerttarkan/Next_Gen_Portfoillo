@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   User,
   Briefcase,
-  Lock,
   Sparkles,
   ArrowRight,
   Music,
@@ -11,10 +10,9 @@ import {
 
 interface LandingProps {
   onSelect: (mode: "personal" | "professional") => void;
-  onAdmin: () => void;
 }
 
-export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
+export const Landing: React.FC<LandingProps> = ({ onSelect }) => {
   const [hovered, setHovered] = useState<"personal" | "professional" | null>(
     null,
   );
@@ -68,15 +66,6 @@ export const Landing: React.FC<LandingProps> = ({ onSelect, onAdmin }) => {
           backgroundSize: "256px 256px",
         }}
       />
-
-      {/* ===== Admin Button ===== */}
-      <button
-        onClick={onAdmin}
-        className="absolute bottom-4 left-4 z-50 opacity-10 hover:opacity-80 text-gray-400 dark:text-gray-500 hover:text-purple-500 dark:hover:text-purple-400 transition-all duration-300"
-        aria-label="Admin"
-      >
-        <Lock className="w-4 h-4" />
-      </button>
 
       {/* ===== Main Content ===== */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-5 py-16 sm:py-20">

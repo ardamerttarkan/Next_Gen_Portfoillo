@@ -3,7 +3,6 @@ import {
   CareerItem,
   MediaItem,
   Project,
-  Skill,
   Song,
   VolunteerItem,
 } from "../types";
@@ -222,17 +221,6 @@ export const projects: Project[] = [
     liveUrl: "#",
     image: "https://picsum.photos/id/72/600/400",
   },
-];
-
-export const skills: Skill[] = [
-  { name: "React / Next.js", level: 95 },
-  { name: "TypeScript", level: 90 },
-  { name: "Node.js", level: 85 },
-  { name: "Tailwind CSS", level: 95 },
-  { name: "PostgreSQL", level: 80 },
-  { name: "AWS Services", level: 70 },
-  { name: "Docker", level: 75 },
-  { name: "GraphQL", level: 80 },
 ];
 
 export const career: CareerItem[] = [

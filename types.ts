@@ -1,5 +1,3 @@
-import React from "react";
-
 export type ViewMode =
   | "landing"
   | "personal"
@@ -57,12 +55,6 @@ export interface Project {
   status?: "active" | "draft";
 }
 
-export interface Skill {
-  name: string;
-  level?: number; // Artık kullanılmıyor, geriye dönük uyumluluk için tutuldu
-  icon?: React.ReactNode;
-}
-
 export interface CareerItem {
   id: string;
   type: "work" | "internship" | "freelance";
@@ -106,7 +98,6 @@ export interface AppData {
   hobbyBlogs: BlogPost[];
   techBlogs: BlogPost[];
   projects: Project[];
-  skills: Skill[];
   career: CareerItem[];
   volunteer: VolunteerItem[];
 }

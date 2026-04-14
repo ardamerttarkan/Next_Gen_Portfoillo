@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AppData, Project, BlogPost, Skill, CareerItem, VolunteerItem, ContactMessage } from "../types";
+import { AppData, Project, BlogPost, CareerItem, VolunteerItem, ContactMessage } from "../types";
 import { RichTextEditor } from "./RichTextEditor";
 import * as api from "../services/api";
 import {
@@ -48,7 +48,6 @@ type DataTab =
   | "projects"
   | "techBlogs"
   | "hobbyBlogs"
-  | "skills"
   | "career"
   | "volunteer";
 
@@ -57,7 +56,6 @@ type Tab = "dashboard" | DataTab | "messages" | "settings";
 type EditingItem =
   | Project
   | BlogPost
-  | Skill
   | CareerItem
   | VolunteerItem
   | null;
@@ -153,8 +151,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         await api.deleteProject(String(id));
       } else if (key === "techBlogs" || key === "hobbyBlogs") {
         await api.deleteBlog(String(id));
-      } else if (key === "skills") {
-        await api.deleteSkill(String(id));
       } else if (key === "career") {
         await api.deleteCareer(String(id));
       } else if (key === "volunteer") {
@@ -163,10 +159,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       // Update local state
       const list = data[key] as any[];
-      const newList = list.filter((item: any) => {
-        if (key === "skills") return item.name !== id;
-        return item.id !== id;
-      });
+      const newList = list.filter((item: any) => item.id !== id);
       updateData({ ...data, [key]: newList });
     } catch (err: any) {
       alert("Silme hatası: " + (err.message || "Bilinmeyen hata"));
@@ -194,44 +187,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     try {
       if (editingItem) {
         // UPDATE
-        if (key === "skills") {
-          await api.updateSkill((editingItem as Skill).name, formData);
-        } else {
-          const itemId = (editingItem as Project | BlogPost | CareerItem | VolunteerItem).id;
-          if (key === "projects") {
-            await api.updateProject(itemId, formData);
-          } else if (key === "techBlogs" || key === "hobbyBlogs") {
-            await api.updateBlog(itemId, formData);
-          } else if (key === "career") {
-            await api.updateCareer(itemId, formData);
-          } else if (key === "volunteer") {
-            await api.updateVolunteer(itemId, formData);
-          }
+        const itemId = (editingItem as Project | BlogPost | CareerItem | VolunteerItem).id;
+        if (key === "projects") {
+          await api.updateProject(itemId, formData);
+        } else if (key === "techBlogs" || key === "hobbyBlogs") {
+          await api.updateBlog(itemId, formData);
+        } else if (key === "career") {
+          await api.updateCareer(itemId, formData);
+        } else if (key === "volunteer") {
+          await api.updateVolunteer(itemId, formData);
         }
 
         const newList = currentList.map((item) => {
-          if (key === "skills") {
-            return item.name === (editingItem as Skill).name
-              ? { ...item, ...formData }
-              : item;
-          }
-          const itemId = (editingItem as Project | BlogPost | CareerItem | VolunteerItem).id;
           return item.id === itemId ? { ...item, ...formData } : item;
         });
         updateData({ ...data, [key]: newList });
       } else {
         // CREATE
-        const newItem =
-          key === "skills"
-            ? { ...formData }
-            : { ...formData, id: formData.id || `${Date.now()}` };
+        const newItem = { ...formData, id: formData.id || `${Date.now()}` };
 
         if (key === "projects") {
           await api.createProject(newItem);
         } else if (key === "techBlogs" || key === "hobbyBlogs") {
           await api.createBlog(newItem);
-        } else if (key === "skills") {
-          await api.createSkill(newItem);
         } else if (key === "career") {
           await api.createCareer(newItem);
         } else if (key === "volunteer") {
@@ -343,13 +321,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             active={activeTab === "techBlogs"}
             collapsed={!isSidebarOpen}
             onClick={() => setActiveTab("techBlogs")}
-          />
-          <SidebarBtn
-            icon={Code}
-            label="Skills"
-            active={activeTab === "skills"}
-            collapsed={!isSidebarOpen}
-            onClick={() => setActiveTab("skills")}
           />
           <SidebarBtn
             icon={Briefcase}
@@ -466,12 +437,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   color="purple"
                 />
                 <StatCard
-                  label="Skills Listed"
-                  value={data.skills.length}
-                  icon={Code}
-                  color="orange"
-                />
-                <StatCard
                   label="Career Items"
                   value={data.career.length}
                   icon={Briefcase}
@@ -558,39 +523,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
 
               <div className="grid gap-4">
-                {activeTab === "skills" ? (
-                  data.skills.length === 0 ? (
-                    <EmptyState label="Skills" />
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {data.skills.map((skill, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-gray-900 border border-gray-800 p-5 rounded-xl flex items-center justify-between group hover:border-prof-blue/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-prof-blue" />
-                            <h3 className="font-bold text-lg">{skill.name}</h3>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEdit(skill, "skills")}
-                              className="p-2 text-gray-500 hover:text-white bg-gray-800 rounded-lg"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete("skills", skill.name)}
-                              className="p-2 text-gray-500 hover:text-red-400 bg-gray-800 rounded-lg"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                ) : activeTab === "career" ? (
+                {activeTab === "career" ? (
                   data.career.length === 0 ? (
                     <EmptyState label="Career" />
                   ) : (
@@ -986,7 +919,6 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           liveUrl: "",
           status: "active",
         });
-      else if (type === "skills") setFormData({ name: "" });
       else if (type === "career")
         setFormData({
           type: "work",
@@ -1079,9 +1011,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
         <div className="p-4 sm:p-6 border-b border-gray-800 flex justify-between items-center">
           <h2 className="text-xl font-bold font-display text-white">
             {initialData ? "Edit" : "Create New"}{" "}
-            {type === "skills"
-              ? "Skill"
-              : type === "projects"
+            {type === "projects"
                 ? "Project"
                 : type === "career"
                   ? "Career Item"
@@ -1097,9 +1027,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
           <InputGroup
             label={
-              type === "skills"
-                ? "Skill Name"
-                : type === "career"
+              type === "career"
                   ? "Pozisyon / Ünvan"
                   : type === "volunteer"
                     ? "Görev / Rol"
@@ -1108,13 +1036,8 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
           >
             <input
               type="text"
-              value={formData.title || formData.name || ""}
-              onChange={(e) =>
-                handleChange(
-                  type === "skills" ? "name" : "title",
-                  e.target.value,
-                )
-              }
+              value={formData.title || ""}
+              onChange={(e) => handleChange("title", e.target.value)}
               className={INPUT_CLASS}
               placeholder={
                 type === "career"
@@ -1155,7 +1078,7 @@ const EditorModal = ({ type, initialData, onClose, onSave }: any) => {
             </InputGroup>
           )}
 
-          {type === "skills" ? null : type === "career" ? (
+          {type === "career" ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <InputGroup label="Şirket / Kurum">

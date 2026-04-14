@@ -703,7 +703,7 @@ export const PersonalLayout: React.FC<PersonalLayoutProps> = ({
                 <BookOpen className="text-amber-500 dark:text-amber-400 w-5 h-5" />
               </div>
               <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
-                Gündelik Blog
+                Blog
               </h2>
             </div>
             <button

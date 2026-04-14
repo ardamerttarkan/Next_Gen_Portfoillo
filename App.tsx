@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
+import ReactGA from "react-ga4";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { ViewMode, AppData, BlogPost } from "./types";
 import { Home } from "lucide-react";
@@ -41,6 +42,9 @@ const BlogList = lazy(() =>
 const NotFound = lazy(() =>
   import("./components/NotFound").then((m) => ({ default: m.NotFound })),
 );
+
+// Initialize Google Analytics
+ReactGA.initialize("G-WC51TN4YQR");
 
 /** Genel sayfa geçişlerinde gösterilen minimal fallback */
 const PageFallback = () => (
@@ -144,10 +148,17 @@ const App: React.FC = () => {
     hobbyBlogs: mockData.hobbyBlogs,
     techBlogs: mockData.techBlogs,
     projects: mockData.projects,
-    skills: mockData.skills,
     career: mockData.career,
     volunteer: mockData.volunteer,
   });
+
+  // Send pageview to Google Analytics on route/view change
+  useEffect(() => {
+    ReactGA.send({
+      hitType: "pageview",
+      page: window.location.pathname + window.location.search,
+    });
+  }, [view, selectedBlog?.title]);
 
   // Load data from API on mount
   useEffect(() => {
@@ -269,10 +280,7 @@ const App: React.FC = () => {
       <ErrorBoundary>
         {view === "landing" && (
           <Suspense fallback={<PageFallback />}>
-            <Landing
-              onSelect={handleViewChange}
-              onAdmin={() => handleViewChange("admin-login")}
-            />
+            <Landing onSelect={handleViewChange} />
           </Suspense>
         )}
 
@@ -326,7 +334,6 @@ const App: React.FC = () => {
           <Suspense fallback={<PageFallback />}>
             <ProfessionalLayout
               projects={data.projects}
-              skills={data.skills}
               blogs={data.techBlogs}
               career={data.career}
               volunteer={data.volunteer}
