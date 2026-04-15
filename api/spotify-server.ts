@@ -1,60 +1,17 @@
-/**
- * Spotify Backend Proxy Server
- * ============================
- *
- * Bu dosya neden var?
- * -------------------
- * Spotify API'den token yenilemek (refresh) için client_secret gerekir.
- * client_secret'ı frontend'e koyarsak herkes görebilir — güvenlik açığı.
- * Bu yüzden küçük bir Express server oluşturuyoruz:
- *
- * Frontend → /api/spotify/now-playing → Bu server → Spotify API → Cevap geri döner
- *
- * Akış:
- * 1. Server başlarken refresh_token ile yeni access_token alır
- * 2. Her API isteğinde bu token'ı kullanır
- * 3. Token süresi dolmuşsa (401 hatası), otomatik olarak yeniler ve tekrar dener
- *
- * Token Yenileme (Refresh) Nasıl Çalışır?
- * ----------------------------------------
- * POST https://accounts.spotify.com/api/token
- * Body: grant_type=refresh_token&refresh_token=<token>
- * Header: Authorization: Basic base64(client_id:client_secret)
- *
- * Base64 encoding neden? → Spotify'ın OAuth 2.0 standardı böyle istiyor.
- * client_id:client_secret → Base64'e çevrilir → "Basic xxx" şeklinde gönderilir
- */
-
 import path from "path";
 import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-/**
- * ESM Uyumlu __dirname
- * --------------------
- * package.json'da "type": "module" olduğu için Node.js ESM modunda çalışır.
- * ESM'de __dirname ve __filename otomatik tanımlı DEĞİLDİR.
- * import.meta.url → dosyanın file:// URL'sini verir
- * fileURLToPath  → file:// URL'sini normal dosya yoluna çevirir
- * path.dirname   → dosya yolundan dizin kısmını alır
- */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// .env dosyası php-api/ klasöründe toplandı — oraya yönlendiriyoruz
 const envPath = path.resolve(__dirname, "../php-api/.env");
 dotenv.config({ path: envPath });
 
 const app = express();
 
-/**
- * CORS Ayarları
- * -------------
- * Production'da Nginx aynı origin üzerinden proxy yaptığı için
- * CORS genellikle gerekmez. Güvenlik için sadece izin verilen origin'lere izin veriyoruz.
- */
 const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
   ? process.env.CORS_ALLOWED_ORIGINS.split(",")
   : ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000"];
@@ -62,7 +19,6 @@ const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Aynı origin (undefined) veya izin verilen listede ise kabul et
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -75,12 +31,10 @@ app.use(
 
 const PORT = process.env.SPOTIFY_SERVER_PORT || 3001;
 
-// .env'den okunan değerler
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.SPOTIFY_REFRESH_TOKEN;
 
-// Başlangıçta .env yüklenmesini doğrula
 console.log("📂 .env yolu:", envPath);
 console.log("🔑 SPOTIFY_CLIENT_ID:", CLIENT_ID ? "✅ yüklendi" : "❌ BOŞ!");
 console.log(
@@ -96,48 +50,20 @@ console.log(
   process.env.TMDB_API_TOKEN ? "✅ yüklendi" : "❌ BOŞ!",
 );
 
-// Sunucu bellekte tutulan access_token
 let accessToken: string | null = null;
-let tokenExpiresAt: number = 0; // Unix timestamp (ms)
+let tokenExpiresAt: number = 0;
 
-/**
- * getAccessToken()
- * ----------------
- * refresh_token kullanarak Spotify'dan yeni bir access_token alır.
- *
- * Neden her seferinde yeni token almıyoruz?
- * → Rate limit (istek sınırı) yememek için token'ı cache'liyoruz.
- * → tokenExpiresAt ile süresini kontrol ediyoruz.
- * → Süresi dolmamışsa mevcut token'ı kullanıyoruz.
- */
 async function getAccessToken(): Promise<string> {
-  // Token hâlâ geçerliyse tekrar almaya gerek yok (5 dakika pay bırakıyoruz)
   if (accessToken && Date.now() < tokenExpiresAt - 5 * 60 * 1000) {
     return accessToken;
   }
 
   console.log("🔄 Spotify token yenileniyor...");
 
-  /**
-   * Base64 encoding:
-   * Spotify, client_id ve client_secret'ı "client_id:client_secret" formatında,
-   * Base64'e çevrilerek Authorization header'ında göndermeni ister.
-   * Bu, HTTP Basic Authentication standardıdır.
-   *
-   * Buffer.from(string).toString('base64') → Node.js'de Base64'e çevirme yolu
-   */
   const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString(
     "base64",
   );
 
-  /**
-   * URLSearchParams:
-   * POST body'sini "application/x-www-form-urlencoded" formatında göndermek için kullanılır.
-   * JSON değil, form-data formatı — Spotify bunu istiyor.
-   *
-   * grant_type=refresh_token → "Ben zaten yetkilendirildim, sadece token'ımı yenile" demek
-   * refresh_token → Spotify'ın sana verdiği kalıcı anahtar
-   */
   const params = new URLSearchParams({
     grant_type: "refresh_token",
     refresh_token: REFRESH_TOKEN!,
@@ -161,22 +87,12 @@ async function getAccessToken(): Promise<string> {
   const data = await response.json();
   accessToken = data.access_token;
 
-  // expires_in saniye cinsinden → milisaniyeye çevirip şu anki zamana ekliyoruz
   tokenExpiresAt = Date.now() + data.expires_in * 1000;
 
   console.log("✅ Yeni token alındı, geçerlilik:", data.expires_in, "saniye");
   return accessToken!;
 }
 
-/**
- * spotifyFetch()
- * --------------
- * Spotify API'ye istek atan yardımcı fonksiyon.
- * Token süresi dolmuşsa otomatik olarak yeniler ve tekrar dener.
- *
- * retry parametresi: Sonsuz döngüyü önler.
- * İlk deneme başarısız → token yenile → tekrar dene → yine başarısızsa hata fırlat
- */
 async function spotifyFetch(endpoint: string, retry = true): Promise<any> {
   const token = await getAccessToken();
 
@@ -186,15 +102,13 @@ async function spotifyFetch(endpoint: string, retry = true): Promise<any> {
     },
   });
 
-  // 401 = Unauthorized → Token süresi dolmuş demek
   if (response.status === 401 && retry) {
     console.log("⚠️ Token süresi dolmuş, yenileniyor...");
-    accessToken = null; // Cache'i temizle
+    accessToken = null;
     tokenExpiresAt = 0;
-    return spotifyFetch(endpoint, false); // Bir kere daha dene (retry=false ile)
+    return spotifyFetch(endpoint, false);
   }
 
-  // 204 = No Content → Şu an hiçbir şey çalmıyor
   if (response.status === 204) {
     return null;
   }
@@ -207,20 +121,6 @@ async function spotifyFetch(endpoint: string, retry = true): Promise<any> {
   return response.json();
 }
 
-// ============================================
-// API ENDPOINTS (Frontend bunlara istek atar)
-// ============================================
-
-/**
- * GET /api/spotify/now-playing
- * ----------------------------
- * Şu anda çalan şarkıyı getirir.
- *
- * Spotify endpoint: /v1/me/player/currently-playing
- *
- * Dönen veri: { isPlaying, title, artist, album, albumArt, duration_ms, progress_ms, songUrl }
- * null dönerse → Hiçbir şey çalmıyor demek
- */
 app.get("/api/spotify/now-playing", async (_req, res) => {
   try {
     const data = await spotifyFetch("/me/player/currently-playing");
@@ -229,14 +129,12 @@ app.get("/api/spotify/now-playing", async (_req, res) => {
       return res.json({ isPlaying: false });
     }
 
-    // Spotify'ın döndüğü veriyi sadeleştiriyoruz
-    // Ham veri çok büyük — frontend'in ihtiyacı olan kısımları seçiyoruz
     res.json({
       isPlaying: data.is_playing,
       title: data.item.name,
       artist: data.item.artists.map((a: any) => a.name).join(", "),
       album: data.item.album.name,
-      albumArt: data.item.album.images[0]?.url, // images dizisi büyükten küçüğe sıralı, [0] en büyük
+      albumArt: data.item.album.images[0]?.url,
       duration_ms: data.item.duration_ms,
       progress_ms: data.progress_ms,
       songUrl: data.item.external_urls.spotify,
@@ -247,29 +145,17 @@ app.get("/api/spotify/now-playing", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/spotify/top-tracks
- * ---------------------------
- * En çok dinlenen şarkıları getirir.
- *
- * Spotify endpoint: /v1/me/top/tracks
- * Query params:
- *   time_range: short_term (son 4 hafta) | medium_term (son 6 ay) | long_term (tüm zamanlar)
- *   limit: Kaç şarkı istiyorsun (max 50)
- *
- * Bu endpoint user-top-read scope'u gerektirir (senin token'ında var ✓)
- */
 app.get("/api/spotify/top-tracks", async (_req, res) => {
   try {
     const data = await spotifyFetch(
       "/me/top/tracks?time_range=short_term&limit=10",
     );
 
-    const tracks = data.items.map((track: any, index: number) => ({
+    const tracks = data.items.map((track: any) => ({
       id: track.id,
       title: track.name,
       artist: track.artists.map((a: any) => a.name).join(", "),
-      albumArt: track.album.images[1]?.url || track.album.images[0]?.url, // [1] = 300x300 orta boy
+      albumArt: track.album.images[1]?.url || track.album.images[0]?.url,
       duration: formatDuration(track.duration_ms),
       songUrl: track.external_urls.spotify,
     }));
@@ -281,21 +167,12 @@ app.get("/api/spotify/top-tracks", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/spotify/top-artists
- * ----------------------------
- * En çok dinlenen sanatçıları getirir.
- *
- * Spotify endpoint: /v1/me/top/artists
- * Dönen veri: isim, fotoğraf, türler (genres), popülerlik puanı
- */
 app.get("/api/spotify/top-artists", async (_req, res) => {
   try {
     const data = await spotifyFetch(
       "/me/top/artists?time_range=short_term&limit=10",
     );
 
-    // data.items undefined olabilir (scope eksikliği veya veri yetersizliği)
     if (!data?.items) {
       console.warn("Top Artists: items boş döndü (scope eksik olabilir)");
       return res.json([]);
@@ -313,7 +190,6 @@ app.get("/api/spotify/top-artists", async (_req, res) => {
     res.json(artists);
   } catch (error: any) {
     console.error("Top Artists hatası:", error.message);
-    // Scope hatası durumunda boş array dön (UI çökmesini önle)
     if (error.message.includes("403")) {
       return res.json([]);
     }
@@ -321,16 +197,6 @@ app.get("/api/spotify/top-artists", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/spotify/recently-played
- * --------------------------------
- * Son dinlenen şarkıları getirir.
- *
- * Spotify endpoint: /v1/me/player/recently-played
- * Bu endpoint user-read-recently-played scope'u gerektirir (senin token'ında var ✓)
- *
- * Farkı: top-tracks "en çok dinlenen", recently-played "en son dinlenen"
- */
 app.get("/api/spotify/recently-played", async (_req, res) => {
   try {
     const data = await spotifyFetch("/me/player/recently-played?limit=10");
@@ -353,25 +219,11 @@ app.get("/api/spotify/recently-played", async (_req, res) => {
   }
 });
 
-/**
- * formatDuration()
- * ----------------
- * Milisaniyeyi "dakika:saniye" formatına çevirir.
- * Örnek: 230000ms → "3:50"
- *
- * Math.floor → Aşağı yuvarla (3.8 dakika → 3 dakika)
- * % 60 → Kalan saniyeyi bul (230 saniye → 230 % 60 = 50 saniye)
- * .padStart(2, '0') → Tek haneli saniyenin başına 0 ekle (5 → "05")
- */
 function formatDuration(ms: number): string {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
-
-// ============================================
-// TMDB API ENDPOINTS
-// ============================================
 
 const TMDB_TOKEN = process.env.TMDB_API_TOKEN;
 const TMDB_MOVIES_LIST = process.env.TMDB_MOVIES_LIST_ID || "8635027";
@@ -385,12 +237,6 @@ const TMDB_CURRENTLY_WATCHING_LIST =
 const TMDB_BASE = "https://api.themoviedb.org";
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/**
- * tmdbFetch()
- * -----------
- * TMDB API'ye istek atan yardımcı fonksiyon.
- * Bearer token ile Authorization header gönderir.
- */
 async function tmdbFetch(endpoint: string): Promise<any> {
   const response = await fetch(`${TMDB_BASE}${endpoint}`, {
     headers: {
@@ -407,12 +253,6 @@ async function tmdbFetch(endpoint: string): Promise<any> {
   return response.json();
 }
 
-/**
- * GET /api/tmdb/movies
- * --------------------
- * Favori filmler listesini TMDB'den çeker.
- * List ID .env'den okunur.
- */
 app.get("/api/tmdb/movies", async (_req, res) => {
   try {
     const data = await tmdbFetch(
@@ -439,11 +279,6 @@ app.get("/api/tmdb/movies", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/tmdb/series
- * --------------------
- * Favori diziler listesini TMDB'den çeker.
- */
 app.get("/api/tmdb/series", async (_req, res) => {
   try {
     const data = await tmdbFetch(
@@ -470,11 +305,6 @@ app.get("/api/tmdb/series", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/tmdb/recent-movies
- * ---------------------------
- * Son izlenen filmleri TMDB listesinden çeker.
- */
 app.get("/api/tmdb/recent-movies", async (_req, res) => {
   try {
     const data = await tmdbFetch(
@@ -501,11 +331,6 @@ app.get("/api/tmdb/recent-movies", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/tmdb/recent-series
- * ---------------------------
- * Son izlenen dizileri TMDB listesinden çeker.
- */
 app.get("/api/tmdb/recent-series", async (_req, res) => {
   try {
     const data = await tmdbFetch(
@@ -532,12 +357,6 @@ app.get("/api/tmdb/recent-series", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/tmdb/currently-watching
- * --------------------------------
- * Şu an izlenen diziyi TMDB listesinden çeker.
- * Liste sadece 1 dizi içermeli.
- */
 app.get("/api/tmdb/currently-watching", async (_req, res) => {
   try {
     const data = await tmdbFetch(
@@ -549,7 +368,6 @@ app.get("/api/tmdb/currently-watching", async (_req, res) => {
       return res.json(null);
     }
 
-    // Sadece ilk diziyi al
     const show = results[0];
     const series = {
       id: show.id,
@@ -571,12 +389,6 @@ app.get("/api/tmdb/currently-watching", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/health
- * ---------------
- * Sunucunun ayakta olup olmadığını kontrol eder.
- * Production için minimal bilgi döner.
- */
 app.get("/api/health", (_req, res) => {
   res.json({
     status: "ok",
@@ -584,10 +396,8 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-// Server'ı başlat
 app.listen(PORT, () => {
   console.log(`🎵 Spotify proxy server çalışıyor: http://localhost:${PORT}`);
-  // Başlangıçta bir kere token al (cache'e at)
   getAccessToken().catch((err) =>
     console.error("İlk token alma başarısız:", err.message),
   );

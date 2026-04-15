@@ -14,8 +14,23 @@ dist-ssr
 
 # Environment variables (GİZLİ ANAHTARLAR!)
 .env
+.env.*
 .env.local
 .env.*.local
+php-api/.env
+!.env.example
+!php-api/.env.example
+
+# Local tooling
+.codex
+.codex/
+
+# Build and cache artifacts
+coverage/
+build/
+*.tsbuildinfo
+.eslintcache
+.phpunit.result.cache
 
 # Editor directories and files
 .vscode/*
